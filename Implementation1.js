@@ -25,7 +25,6 @@ app.get('/', (req, res) => {
   }
 });
 
-
 //Log in as 'alice'
 
 //Edit cookie to say 'username=bob'
