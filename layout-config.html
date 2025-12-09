@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Configuration Export</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #4a6491;
+        }
+        
+        h2 {
+            color: #4a6491;
+            margin: 2rem 0 1rem;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1.5rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+        }
+        
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        .grid-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .grid-item {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 Layout Configuration Export</h1>
+        <p>Este arquivo documenta todos os estilos e estrutura usados no layout CSRF Protection.</p>
+        
+        <div class="section">
+            <h2>🎨 Paleta de Cores Principal</h2>
+            <p><span class="color-swatch" style="background: #2c3e50;"></span> Dark Blue: #2c3e50 (Headers)</p>
+            <p><span class="color-swatch" style="background: #4a6491;"></span> Medium Blue: #4a6491 (Primary)</p>
+            <p><span class="color-swatch" style="background: #f8f9fa;"></span> Light Gray: #f8f9fa (Background)</p>
+            <p><span class="color-swatch" style="background: #e9ecef;"></span> Border Gray: #e9ecef</p>
+        </div>
+        
+        <div class="section">
+            <h2>📱 Grid System Responsivo</h2>
+            <div class="code-block">.protection-methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 768px) {
+  .protection-methods {
+    grid-template-columns: 1fr;
+  }
+}</div>
+            
+            <h3>Demo do Grid:</h3>
+            <div class="grid-demo">
+                <div class="grid-item">Card 1</div>
+                <div class="grid-item">Card 2</div>
+                <div class="grid-item">Card 3</div>
+                <div class="grid-item">Card 4</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🎴 Card Component</h2>
+            <div class="code-block">.method-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.method-card:hover {
+  transform: translateY(-5px);
+}
+
+.method-title {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid;
+}</div>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Tabela de Comparação</h2>
+            <div class="code-block">.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-table th {
+  background: #4a6491;
+  color: white;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.comparison-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}</div>
+        </div>
+        
+        <div class="section">
+            <h2>🔄 Sistema de Tabs</h2>
+            <div class="code-block">.tabs {
+  display: flex;
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-weight: 600;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.tab.active {
+  color: #4a6491;
+  border-bottom: 3px solid #4a6491;
+  margin-bottom: -2px;
+}</div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 Blocos de Código</h2>
+            <div class="code-block">.code-block {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  border-radius: 5px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}</div>
+        </div>
+        
+        <div class="section">
+            <h2>📋 Estrutura HTML Base</h2>
+            <div class="code-block">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Your Title Here&lt;/title&gt;
+    &lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"&gt;
+    &lt;style&gt;
+        /* Todos os estilos vão aqui */
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="container"&gt;
+        &lt;header&gt;
+            &lt;div class="logo"&gt;
+                &lt;div class="logo-img"&gt;LF&lt;/div&gt;
+                &lt;span&gt;Linux Foundation&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;h1&gt;Main Title&lt;/h1&gt;
+            &lt;p class="subtitle"&gt;Subtitle text here&lt;/p&gt;
+        &lt;/header&gt;
+        
+        &lt;div class="content"&gt;
+            &lt;!-- Seu conteúdo aqui --&gt;
+        &lt;/div&gt;
+        
+        &lt;footer&gt;
+            &lt;p&gt;Footer content&lt;/p&gt;
+        &lt;/footer&gt;
+    &lt;/div&gt;
+    
+    &lt;script&gt;
+        // Seus scripts aqui
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</div>
+        </div>
+        
+        <div class="section">
+            <h2>🎯 Elementos Interativos</h2>
+            <h3>Botões:</h3>
+            <div class="code-block">button {
+  background: #4a6491;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  display: inline-block;
+}
+
+button:hover {
+  background: #3a5379;
+}</div>
+            
+            <h3>Inputs:</h3>
+            <div class="code-block">input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+}</div>
+        </div>
+        
+        <div class="section">
+            <h2>📱 Media Queries (Responsividade)</h2>
+            <div class="code-block">/* Tablet */
+@media (max-width: 768px) {
+  .protection-methods {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-demo {
+    grid-template-columns: 1fr;
+  }
+  
+  .pros-cons {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .tabs {
+    flex-direction: column;
+  }
+  
+  .tab {
+    width: 100%;
+    text-align: left;
+  }
+}</div>
+        </div>
+        
+        <div class="section">
+            <h2>🔤 Tipografia</h2>
+            <div class="code-block">/* Font stack */
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+             Oxygen, Ubuntu, Cantarell, sans-serif;
+
+/* Headings */
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.2rem; }
+
+/* Body text */
+p { line-height: 1.6; font-size: 1rem; }
+
+/* Small text */
+.subtitle { font-size: 1.2rem; opacity: 0.9; }</div>
+        </div>
+        
+        <div class="section">
+            <h2>🎨 Efeitos Visuais</h2>
+            <div class="code-block">/* Sombras */
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Light shadow */
+box-shadow: 0 4px 20px rgba(0,0,0,0.1); /* Strong shadow */
+
+/* Gradientes */
+background: linear-gradient(to right, #2c3e50, #4a6491);
+background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+
+/* Transições */
+transition: transform 0.3s ease;
+transition: background 0.3s ease;
+transition: all 0.3s ease;
+
+/* Bordas arredondadas */
+border-radius: 10px; /* Large */
+border-radius: 5px;  /* Medium */
+border-radius: 4px;  /* Small */</div>
+        </div>
+        
+        <div class="section">
+            <h2>📦 Dependências Externas</h2>
+            <div class="code-block">&lt;!-- Prism.js for syntax highlighting --&gt;
+&lt;link rel="stylesheet" 
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"&gt;
+&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- Font Awesome (opcional) --&gt;
+&lt;link rel="stylesheet" 
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"&gt;</div>
+        </div>
+        
+        <div class="section">
+            <h2>🚀 Scripts Padrão</h2>
+            <div class="code-block">// Tab functionality
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    tab.classList.add('active');
+    const tabId = tab.getAttribute('data-tab');
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  // Your initialization code here
+  console.log('Page loaded');
+});</div>
+        </div>
+        
+        <div class="section">
+            <h2>📄 Estrutura de Arquivos Recomendada</h2>
+            <div class="code-block">/projeto/
+├── index.html              # Página principal
+├── csrf-demo.html          # Demonstração CSRF
+├── csrf-protection.html    # Técnicas de proteção
+├── layout-config.html      # Este arquivo de configuração
+├── assets/
+│   ├── css/
+│   │   └── styles.css     # Estilos principais
+│   ├── js/
+│   │   └── main.js        # Scripts principais
+│   └── images/            # Imagens do projeto
+└── README.md              # Documentação</div>
+        </div>
+        
+        <div class="section">
+            <h2>🎯 Como Usar em Outro Chat</h2>
+            <p><strong>Instruções para o outro assistente:</strong></p>
+            <ol>
+                <li>Copie toda a estrutura HTML básica</li>
+                <li>Use a paleta de cores especificada</li>
+                <li>Implemente o grid system responsivo</li>
+                <li>Siga o padrão dos cards (.method-card)</li>
+                <li>Use as tabelas com o estilo .comparison-table</li>
+                <li>Implemente tabs seguindo o padrão</li>
+                <li>Mantenha a consistência dos blocos de código</li>
+                <li>Adicione os efeitos visuais (shadows, gradients, transitions)</li>
+                <li>Garanta responsividade com as media queries</li>
+                <li>Use os scripts padrão para funcionalidades comuns</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

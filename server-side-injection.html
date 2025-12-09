@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server-Side Code Injection - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #4a6491;
+        }
+        
+        .demo-area {
+            grid-column: span 2;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-area {
+                grid-column: span 1;
+            }
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        .form-section.command {
+            border-top: 4px solid #ff6b6b;
+        }
+        
+        .form-section.sql {
+            border-top: 4px solid #4ecdc4;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .prevention-list {
+            background: #e8f5e9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+        }
+        
+        .prevention-list h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .simulate-button {
+            background: #dc3545;
+            margin-top: 1rem;
+        }
+        
+        .simulate-button:hover {
+            background: #c82333;
+        }
+        
+        .status-message {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .attack-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 150px;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-step:not(:last-child)::after {
+                content: "↓";
+                right: 50%;
+                top: auto;
+                bottom: -25px;
+                transform: translateX(50%);
+            }
+            
+            .attack-flow {
+                flex-direction: column;
+            }
+            
+            .flow-step {
+                width: 100%;
+            }
+        }
+        
+        button {
+            background: #4a6491;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            display: inline-block;
+        }
+        
+        button:hover {
+            background: #3a5379;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding: 1rem 0;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .nav-button {
+            background: #4a6491;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-button:hover {
+            background: #3a5379;
+        }
+        
+        .chapter-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+        
+        .chapter-number {
+            background: #5f27cd;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            min-width: 120px;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .consequences-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .consequence-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .consequence-icon {
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .comparison-item.unsafe {
+            border-top: 4px solid #dc3545;
+        }
+        
+        .comparison-item.safe {
+            border-top: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="chapter-header">
+                
+                <div>
+                    <h1>Server-Side Code Injection</h1>
+                    <p class="subtitle">When unsafe input equals full system access</p>
+                </div>
+            </div>
+            
+            
+        </header>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">What is Server-Side Injection?</h2>
+                <p>Server-side code injection vulnerabilities occur when an application takes user input and combines it with code that will be executed by the server, without properly separating data from code.</p>
+                
+                <div class="info">
+                    <strong>Key point:</strong> While client-side vulnerabilities like XSS primarily affect individual users, server-side injection can compromise entire applications and their data.
+                </div>
+                
+                <div class="danger">
+                    <strong>Critical:</strong> Attackers can read or modify any data in the application's database, execute arbitrary commands on the server, and access internal network resources.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Attack Prerequisites</h2>
+                <ul class="step-list">
+                    <li>Application takes user input and processes it server-side</li>
+                    <li>Input is not properly validated or sanitized</li>
+                    <li>Input is combined with executable code (SQL, shell commands)</li>
+                    <li>No separation between data and code</li>
+                    <li>Application runs with sufficient privileges</li>
+                </ul>
+                
+                <div class="warning">
+                    <strong>Note:</strong> Server-side injection is particularly dangerous because attackers can move laterally to attack other systems and steal or destroy sensitive data.
+                </div>
+            </div>
+            
+            <div class="card demo-area">
+                <h2 class="card-title">Command Injection Demonstration</h2>
+                <p>Below we demonstrate two types of server-side injection: Command Injection and SQL Injection.</p>
+                
+                <div class="attack-flow">
+                    <div class="flow-step">
+                        <strong>Step 1</strong>
+                        <p>User submits input to server</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 2</strong>
+                        <p>Server processes unsafe input</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 3</strong>
+                        <p>Input combined with executable code</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 4</strong>
+                        <p>Malicious code executes on server</p>
+                    </div>
+                </div>
+                
+                <div class="form-container">
+                    <!-- Command Injection Example -->
+                    <div class="form-section command">
+                        <h3>Command Injection Example</h3>
+                        <p>A vulnerable file viewer that uses system shell commands:</p>
+                        
+                        <div class="code-block">
+// Vulnerable Node.js code<br>
+const app = express()<br><br>
+
+app.get('/view', (req, res) => {<br>
+&nbsp;&nbsp;const { filename } = req.query<br>
+&nbsp;&nbsp;// UNSAFE: User input concatenated with shell command<br>
+&nbsp;&nbsp;const stdout = childProcess.execSync(`cat ${filename}`)<br>
+&nbsp;&nbsp;res.send(stdout.toString())<br>
+})
+                        </div>
+                        
+                        <div class="danger">
+                            <strong>Attack Input:</strong> <code>file.txt; rm -rf /</code><br>
+                            <strong>Executed Command:</strong> <code>cat file.txt; rm -rf /</code><br>
+                            This would delete everything on the server!
+                        </div>
+                        
+                        <button id="simulate-command">Simulate Command Injection</button>
+                        
+                        <div id="command-status" class="status-message"></div>
+                    </div>
+                    
+                    <!-- SQL Injection Example -->
+                    <div class="form-section sql">
+                        <h3>SQL Injection Example</h3>
+                        <p>A vulnerable authentication system that builds SQL queries with user input:</p>
+                        
+                        <div class="code-block">
+// Vulnerable authentication<br>
+app.post('/login', (req, res) => {<br>
+&nbsp;&nbsp;const { username, password } = req.body<br>
+&nbsp;&nbsp;// UNSAFE: User input directly in query<br>
+&nbsp;&nbsp;const query = `SELECT * FROM users <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;WHERE username = '${username}'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AND password = '${password}'`<br><br>
+&nbsp;&nbsp;db.get(query, (err, row) => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (row) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;res.send('Welcome ' + row.username)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;})<br>
+})
+                        </div>
+                        
+                        <div class="danger">
+                            <strong>Attack Input:</strong><br>
+                            username: <code>' OR '1'='1</code><br>
+                            password: <code>' OR '1'='1</code><br>
+                            This bypasses authentication completely!
+                        </div>
+                        
+                        <button id="simulate-sql">Simulate SQL Injection</button>
+                        
+                        <div id="sql-status" class="status-message"></div>
+                    </div>
+                </div>
+                
+                <div class="warning">
+                    <strong>Important:</strong> These examples show why NEVER to trust user input or combine it with executable code. Always use parameterized queries and safe APIs.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">How The Attacks Work</h2>
+                <ol class="step-list">
+                    <li>The victim submits malicious input to the server</li>
+                    <li>The server processes the input without validation</li>
+                    <li>Input gets combined with executable code (SQL or shell commands)</li>
+                    <li>The malicious code executes with server privileges</li>
+                    <li>Attacker gains unauthorized access or causes damage</li>
+                    <li>Data is stolen, modified, or destroyed</li>
+                    <li>Server may be compromised for further attacks</li>
+                </ol>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Attack Consequences</h2>
+                <div class="consequences-list">
+                    <div class="consequence-item">
+                        <div class="consequence-icon">⚡</div>
+                        <div>Read or modify any data in the application's database</div>
+                    </div>
+                    <div class="consequence-item">
+                        <div class="consequence-icon">⚡</div>
+                        <div>Execute arbitrary commands on the server</div>
+                    </div>
+                    <div class="consequence-item">
+                        <div class="consequence-icon">⚡</div>
+                        <div>Access internal network resources</div>
+                    </div>
+                    <div class="consequence-item">
+                        <div class="consequence-icon">⚡</div>
+                        <div>Move laterally to attack other systems</div>
+                    </div>
+                    <div class="consequence-item">
+                        <div class="consequence-icon">⚡</div>
+                        <div>Steal or destroy sensitive data</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card demo-area">
+            <h2 class="card-title">Defense: Safe vs Unsafe Approaches</h2>
+            
+            <div class="comparison">
+                <div class="comparison-item unsafe">
+                    <h4>🚨 Unsafe Command Execution</h4>
+                    <div class="code-block">// String concatenation - VULNERABLE
+const stdout = childProcess.execSync(`cat ${filename}`)</div>
+                    <p>Allows command injection via shell metacharacters (;, &, |, etc.)</p>
+                </div>
+                
+                <div class="comparison-item safe">
+                    <h4>✅ Safe Command Execution</h4>
+                    <div class="code-block">// Argument array - SAFE
+const child = childProcess.spawnSync('cat', [filename])
+if (child.status !== 0) {
+  res.send(child.stderr.toString())
+} else {
+  res.send(child.stdout.toString())
+}</div>
+                    <p>Arguments passed safely without shell interpretation</p>
+                </div>
+            </div>
+            
+            <div class="comparison">
+                <div class="comparison-item unsafe">
+                    <h4>🚨 Unsafe SQL Query</h4>
+                    <div class="code-block">// String concatenation - VULNERABLE
+const query = `SELECT * FROM users 
+               WHERE username = "${username}"`</div>
+                    <p>Allows SQL injection via quotes, comments, and SQL commands</p>
+                </div>
+                
+                <div class="comparison-item safe">
+                    <h4>✅ Safe Parameterized Query</h4>
+                    <div class="code-block">// Parameterized query - SAFE
+const query = 'SELECT * FROM users WHERE username = ?'
+const results = db.all(query, username)</div>
+                    <p>Database driver properly escapes special characters</p>
+                </div>
+            </div>
+            
+            <div class="info">
+                <strong>Recommendation:</strong> Use <code>spawn</code> instead of <code>spawnSync</code> in production to avoid blocking the event loop.
+            </div>
+        </div>
+        
+        <div class="danger">
+            <h3>Multiple Query Execution Example:</h3>
+            <div class="code-block">// Vulnerable logging code
+db.exec(`INSERT INTO logs 
+         VALUES ("Login attempt from ${username}")`)</div>
+            
+            <p><strong>Attack Input:</strong> <code>x"); DROP TABLE users; --</code></p>
+            <p><strong>Resulting SQL:</strong></p>
+            <div class="code-block">INSERT INTO logs VALUES ("Login attempt from x");
+DROP TABLE users; --")</div>
+            <p>This would delete the entire users table!</p>
+        </div>
+        
+        <div class="success">
+            <h3>✅ Golden Rule for Prevention</h3>
+            <p><strong>Never build queries or commands using string concatenation with untrusted input!</strong></p>
+            <p>Always use:</p>
+            <ol class="step-list">
+                <li>Parameterized queries for database operations</li>
+                <li>Safe APIs that separate arguments from commands</li>
+                <li>Input validation and sanitization</li>
+                <li>Principle of least privilege for database accounts</li>
+                <li>ORM libraries with built-in protection</li>
+            </ol>
+        </div>
+        
+       
+                <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // DOM elements
+        const simulateCommandBtn = document.getElementById('simulate-command');
+        const simulateSqlBtn = document.getElementById('simulate-sql');
+        const commandStatus = document.getElementById('command-status');
+        const sqlStatus = document.getElementById('sql-status');
+        
+        // Simulate command injection
+        simulateCommandBtn.addEventListener('click', function() {
+            // Clear previous status
+            commandStatus.className = 'status-message';
+            
+            // Show the attack simulation
+            simulateCommandBtn.disabled = true;
+            simulateCommandBtn.textContent = 'Executing Attack...';
+            
+            setTimeout(() => {
+                commandStatus.innerHTML = `
+                    <strong>Command Injection Simulation:</strong>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>User submits: <code>file.txt; rm -rf /</code></li>
+                        <li>Server executes: <code>cat file.txt; rm -rf /</code></li>
+                        <li>Shell interprets semicolon as command separator</li>
+                        <li><code>rm -rf /</code> executes with server privileges</li>
+                        <li>All files on server are deleted!</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Attack successful!</strong> Server completely compromised.</p>
+                `;
+                commandStatus.classList.add('error');
+                
+                simulateCommandBtn.disabled = false;
+                simulateCommandBtn.textContent = 'Simulate Command Injection Again';
+            }, 2000);
+        });
+        
+        // Simulate SQL injection
+        simulateSqlBtn.addEventListener('click', function() {
+            // Clear previous status
+            sqlStatus.className = 'status-message';
+            
+            // Show the attack simulation
+            simulateSqlBtn.disabled = true;
+            simulateSqlBtn.textContent = 'Executing Attack...';
+            
+            setTimeout(() => {
+                sqlStatus.innerHTML = `
+                    <strong>SQL Injection Simulation:</strong>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>User submits: username=<code>' OR '1'='1</code>, password=<code>' OR '1'='1</code></li>
+                        <li>Resulting SQL: <code>SELECT * FROM users WHERE username = '' OR '1'='1' AND password = '' OR '1'='1'</code></li>
+                        <li><code>OR '1'='1'</code> makes WHERE clause always true</li>
+                        <li>Query returns first user in database</li>
+                        <li>Attacker logs in without valid credentials!</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Attack successful!</strong> Authentication bypassed.</p>
+                `;
+                sqlStatus.classList.add('error');
+                
+                simulateSqlBtn.disabled = false;
+                simulateSqlBtn.textContent = 'Simulate SQL Injection Again';
+            }, 2000);
+        });
+        
+        // Additional educational content
+        console.log(`
+        Server-Side Injection - Educational Notes:
+        
+        1. Command Injection:
+           - Caused by passing user input to system shell
+           - Attackers use shell metacharacters (;, &, |, \`, $)
+           - Prevention: Use spawn/spawnSync with argument arrays
+        
+        2. SQL Injection:
+           - Caused by building SQL queries with string concatenation
+           - Attackers use quotes, comments, and SQL commands
+           - Prevention: Always use parameterized queries
+        
+        3. Golden Rule: Never trust user input!
+           - Validate all input
+           - Escape/encode when necessary
+           - Use safe APIs that separate data from code
+        `);
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

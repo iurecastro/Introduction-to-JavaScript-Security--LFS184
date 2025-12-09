@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Defense Best Practices - Complete Security Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* Layout System - Consistent with all pages */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .card-title.escape { border-bottom-color: #ff6b6b; }
+        .card-title.frameworks { border-bottom-color: #4ecdc4; }
+        .card-title.csp { border-bottom-color: #45b7d1; }
+        .card-title.nonces { border-bottom-color: #96ceb4; }
+        .card-title.cookies { border-bottom-color: #ff9ff3; }
+        .card-title.headers { border-bottom-color: #feca57; }
+        .card-title.trusted-types { border-bottom-color: #5f27cd; }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .experimental {
+            background: #e8f4fd;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+            border-left: 4px solid #5f27cd;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .demo-area {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .practice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .practice-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .practice-card h4 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        .csp-directives {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .directive-card {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #4a6491;
+        }
+        
+        .directive-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-family: 'Courier New', monospace;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .tab-container {
+            margin: 1.5rem 0;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #4a6491;
+            border-bottom: 3px solid #4a6491;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .bad-good {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .bad-good {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .bad-example {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+        
+        .good-example {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+        
+        .browser-support {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .browser-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .chrome { background: #4285f4; }
+        .firefox { background: #ff7139; }
+        .safari { background: #00b0e6; }
+        .edge { background: #0078d7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>           
+            <h1>XSS Defense Best Practices</h1>
+            <p class="subtitle">Essential Security Patterns for Modern Web Applications</p>
+        </header>
+        
+        <!-- Golden Rule -->
+        <div class="card">
+            <h2 class="card-title">The Golden Rule: Escape at Render Time</h2>
+            <p><strong>Always escape data when rendering, not when storing or processing.</strong> This ensures:</p>
+            
+            <ul class="step-list">
+                <li>Data is escaped properly for its specific context</li>
+                <li>Raw data is preserved in the database for other uses</li>
+                <li>Multiple output formats can be supported from the same data</li>
+                <li>Escaping is always fresh and uses the latest security rules</li>
+            </ul>
+            
+            <div class="bad-good">
+                <div class="bad-example">
+                    <h4>❌ BAD - Escaping at Storage Time</h4>
+                    <div class="code-block">
+// Escaping when storing - DON'T DO THIS!
+app.post('/comments', (req, res) => {
+  const escaped = escapeHtml(req.body.comment);
+  // Problem: Data is permanently altered
+  db.comments.insert(escaped);
+  
+  // What if we need JSON API later?
+  // What if we need plain text export?
+  // What if escaping rules change?
+});
+                    </div>
+                </div>
+                
+                <div class="good-example">
+                    <h4>✅ GOOD - Escaping at Render Time</h4>
+                    <div class="code-block">
+// Escape when rendering - DO THIS!
+app.get('/post/:id', (req, res) => {
+  const comments = db.comments.findByPostId(req.params.id);
+  
+  // Escape for HTML context
+  res.send(`
+    &lt;div class="comments"&gt;
+      ${comments.map(c => 
+        `&lt;div&gt;${escapeHtml(c)}&lt;/div&gt;`
+      ).join('')}
+    &lt;/div&gt;
+  `);
+});
+
+// Same data, different context
+app.get('/api/comments/:id', (req, res) => {
+  const comments = db.comments.findByPostId(req.params.id);
+  // No escaping needed for JSON
+  res.json(comments);
+});
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info">
+                <strong>📊 Multiple Output Contexts:</strong> The same data might need different escaping for HTML, JSON, CSV, PDF, email, or mobile apps. Store clean data, escape appropriately for each output context.
+            </div>
+        </div>
+        
+        <!-- Framework Protection -->
+        <div class="card">
+            <h2 class="card-title frameworks">Use Framework Features</h2>
+            <p>Modern frameworks provide built-in XSS protection. <strong>Always use these built-in protections</strong> instead of writing your own escaping code.</p>
+            
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="react">React</button>
+                    <button class="tab" data-tab="vue">Vue.js</button>
+                    <button class="tab" data-tab="angular">Angular</button>
+                    <button class="tab" data-tab="svelte">Svelte</button>
+                </div>
+                
+                <div id="react" class="tab-content active">
+                    <h4>React - Auto-escaping in JSX</h4>
+                    <div class="code-block">
+// ✅ SAFE - React automatically escapes values in JSX
+function Comment({ text }) {
+  return (
+    &lt;div className="comment"&gt;
+      {text}  {/* Auto-escaped by React */}
+    &lt;/div&gt;
+  );
+}
+
+// If text = '&lt;script&gt;alert("XSS")&lt;/script&gt;'
+// Output: &amp;lt;script&amp;gt;alert(&amp;quot;XSS&amp;quot;)&amp;lt;/script&amp;gt;
+
+// ⚠️ DANGEROUS - dangerouslySetInnerHTML
+function Dangerous({ html }) {
+  return &lt;div dangerouslySetInnerHTML={{ __html: html }} /&gt;;
+}
+
+// ✅ SAFE - With DOMPurify for dangerous content
+import DOMPurify from 'dompurify';
+
+function SafeHTML({ html }) {
+  const clean = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a'],
+    ALLOWED_ATTR: ['href', 'title', 'target']
+  });
+  
+  return &lt;div dangerouslySetInnerHTML={{ __html: clean }} /&gt;;
+}
+                    </div>
+                </div>
+                
+                <div id="vue" class="tab-content">
+                    <h4>Vue.js - Auto-escaping in Templates</h4>
+                    <div class="code-block">
+&lt;template&gt;
+  &lt;!-- ✅ SAFE - Text interpolation is auto-escaped --&gt;
+  &lt;div class="comment"&gt;
+    {{ commentText }}
+  &lt;/div&gt;
+  
+  &lt;!-- ⚠️ DANGEROUS - v-html directive --&gt;
+  &lt;div v-html="rawHtml"&gt;&lt;/div&gt;
+  
+  &lt;!-- ✅ SAFE - Computed property with sanitization --&gt;
+  &lt;div v-html="safeHtml"&gt;&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import DOMPurify from 'dompurify';
+
+export default {
+  data() {
+    return {
+      commentText: '&lt;script&gt;alert("XSS")&lt;/script&gt;',
+      rawHtml: '&lt;b&gt;Some HTML&lt;/b&gt;'
+    };
+  },
+  computed: {
+    safeHtml() {
+      return DOMPurify.sanitize(this.rawHtml, {
+        ALLOWED_TAGS: ['b', 'i', 'em', 'strong'],
+        ALLOWED_ATTR: []
+      });
+    }
+  }
+};
+&lt;/script&gt;
+                    </div>
+                </div>
+                
+                <div id="angular" class="tab-content">
+                    <h4>Angular - Built-in Sanitization</h4>
+                    <div class="code-block">
+import { Component } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+@Component({
+  selector: 'app-comment',
+  template: `
+    &lt;!-- ✅ SAFE - Interpolation is auto-escaped --&gt;
+    &lt;div&gt;{{ commentText }}&lt;/div&gt;
+    
+    &lt;!-- ⚠️ DANGEROUS - Direct [innerHTML] binding --&gt;
+    &lt;div [innerHTML]="rawHtml"&gt;&lt;/div&gt;
+    
+    &lt;!-- ✅ SAFE - Sanitized binding --&gt;
+    &lt;div [innerHTML]="safeHtml"&gt;&lt;/div&gt;
+  `
+})
+export class CommentComponent {
+  commentText = '&lt;script&gt;alert("XSS")&lt;/script&gt;';
+  rawHtml = '&lt;b&gt;Bold text&lt;/b&gt;';
+  safeHtml: SafeHtml;
+  
+  constructor(private sanitizer: DomSanitizer) {
+    // Use Angular's sanitizer
+    this.safeHtml = this.sanitizer.bypassSecurityTrustHtml(
+      this.sanitizer.sanitize(1, this.rawHtml) || ''
+    );
+  }
+}
+                    </div>
+                </div>
+                
+                <div id="svelte" class="tab-content">
+                    <h4>Svelte - Context-aware Escaping</h4>
+                    <div class="code-block">
+&lt;script&gt;
+  let commentText = '&lt;script&gt;alert("XSS")&lt;/script&gt;';
+  let rawHtml = '&lt;b&gt;Bold text&lt;/b&gt;';
+  
+  import DOMPurify from 'dompurify';
+  
+  function sanitize(html) {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong'],
+      ALLOWED_ATTR: []
+    });
+  }
+&lt;/script&gt;
+
+&lt;!-- ✅ SAFE - Auto-escaped text --&gt;
+&lt;div&gt;{commentText}&lt;/div&gt;
+
+&lt;!-- ⚠️ DANGEROUS - @html directive --&gt;
+&lt;div&gt;{@html rawHtml}&lt;/div&gt;
+
+&lt;!-- ✅ SAFE - Sanitized HTML --&gt;
+&lt;div&gt;{@html sanitize(rawHtml)}&lt;/div&gt;
+                    </div>
+                </div>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Framework Limitations:</strong> While frameworks provide great protection, they don't protect against:
+                <ul style="margin-top: 0.5rem;">
+                    <li>Dangerous APIs like <code>dangerouslySetInnerHTML</code> (React)</li>
+                    <li><code>v-html</code> directive (Vue)</li>
+                    <li><code>[innerHTML]</code> binding (Angular)</li>
+                    <li><code>@html</code> directive (Svelte)</li>
+                    <li>Direct DOM manipulation with JavaScript</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Trusted Types Section -->
+        <div class="card">
+            <h2 class="card-title trusted-types">Trusted Types API</h2>
+            
+            <div class="experimental">
+                <strong>🔬 Experimental Feature:</strong> Trusted Types is a new browser security feature that enforces explicit sanitization before using dangerous APIs like <code>innerHTML</code> or <code>eval()</code>. It's under active development and not yet widely available, but represents the future of XSS prevention.
+            </div>
+            
+            <div class="browser-support">
+                <div class="browser-icon chrome">C</div>
+                <span><strong>Chrome:</strong> 83+ (enabled by default)</span>
+                
+                <div class="browser-icon firefox">F</div>
+                <span><strong>Firefox:</strong> Under consideration</span>
+                
+                <div class="browser-icon safari">S</div>
+                <span><strong>Safari:</strong> Under consideration</span>
+                
+                <div class="browser-icon edge">E</div>
+                <span><strong>Edge:</strong> 83+ (enabled by default)</span>
+            </div>
+            
+            <h4>How Trusted Types Works:</h4>
+            <p>Trusted Types forces developers to explicitly sanitize untrusted data before using dangerous DOM APIs. The browser blocks direct assignment to these APIs and only accepts "trusted" values.</p>
+            
+            <div class="code-block">
+// 1. Enable Trusted Types via CSP header
+Content-Security-Policy: 
+    require-trusted-types-for 'script';  // Enable enforcement
+    
+// Optional: Define allowed policies
+Content-Security-Policy:
+    require-trusted-types-for 'script';
+    trusted-types myPolicy;  // Only allow 'myPolicy'
+            </div>
+            
+            <h4>Creating a Trusted Types Policy:</h4>
+            <div class="code-block">
+// 2. Create a policy for sanitizing content
+if (window.trustedTypes && trustedTypes.createPolicy) {
+  const escapePolicy = trustedTypes.createPolicy('myPolicy', {
+    // Define how to create trusted HTML
+    createHTML: (input) => {
+      // Always use a proper sanitizer library!
+      return DOMPurify.sanitize(input, {
+        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
+        ALLOWED_ATTR: []
+      });
+    },
+    
+    // Define how to create trusted scripts
+    createScriptURL: (input) => {
+      // Validate URLs - only allow trusted sources
+      const allowedDomains = [
+        'https://trusted-cdn.com',
+        'https://analytics.example.com'
+      ];
+      
+      try {
+        const url = new URL(input);
+        if (allowedDomains.some(domain => url.origin === domain)) {
+          return input; // Trusted URL
+        }
+      } catch (e) {
+        // Invalid URL
+      }
+      
+      // Return a safe fallback or throw error
+      throw new Error('Untrusted script URL');
+    },
+    
+    // Define how to create trusted script content
+    createScript: (input) => {
+      // Never allow dynamic script creation from untrusted data!
+      throw new Error('Dynamic script creation not allowed');
+    }
+  });
+}
+            </div>
+            
+            <h4>Using Trusted Types in Your Code:</h4>
+            <div class="bad-good">
+                <div class="bad-example">
+                    <h4>❌ Without Trusted Types (Vulnerable)</h4>
+                    <div class="code-block">
+async function displayUserContent(userId) {
+  const response = await fetch(`/api/content/${userId}`);
+  const data = await response.text();
+  
+  // ⚠️ DANGEROUS - Direct assignment
+  // Allows XSS if data contains malicious HTML
+  document.getElementById('content').innerHTML = data;
+}
+                    </div>
+                </div>
+                
+                <div class="good-example">
+                    <h4>✅ With Trusted Types (Secure)</h4>
+                    <div class="code-block">
+async function displayUserContent(userId) {
+  const response = await fetch(`/api/content/${userId}`);
+  const data = await response.text();
+  
+  // ❌ This will THROW an error due to Trusted Types:
+  // document.getElementById('content').innerHTML = data;
+  
+  // ✅ This works safely through the policy:
+  const safeHtml = escapePolicy.createHTML(data);
+  document.getElementById('content').innerHTML = safeHtml;
+}
+
+// Even better: Type-safe wrapper
+function safeInnerHTML(element, html) {
+  if (window.trustedTypes) {
+    // Use Trusted Types when available
+    const policy = trustedTypes.getExposedPolicy('myPolicy');
+    element.innerHTML = policy.createHTML(html);
+  } else {
+    // Fallback for browsers without Trusted Types
+    element.textContent = html; // Or use DOMPurify
+  }
+}
+                    </div>
+                </div>
+            </div>
+            
+            <h4>Protected APIs with Trusted Types:</h4>
+            <div class="code-block">
+// These APIs are protected by Trusted Types:
+element.innerHTML = untrustedData;      // ❌ Requires TrustedHTML
+element.outerHTML = untrustedData;      // ❌ Requires TrustedHTML
+document.write(untrustedData);          // ❌ Requires TrustedHTML
+document.writeln(untrustedData);        // ❌ Requires TrustedHTML
+
+element.setAttribute('onclick', data);  // ❌ Requires TrustedScript
+scriptElement.src = data;               // ❌ Requires TrustedScriptURL
+scriptElement.textContent = data;       // ❌ Requires TrustedScript
+
+// Safe alternatives that don't require Trusted Types:
+element.textContent = data;             // ✅ Safe for text
+element.setAttribute('data-custom', data); // ✅ Safe for data-* attributes
+                    </div>
+            
+            <div class="info">
+                <strong>🎯 Key Benefits of Trusted Types:</strong>
+                <ul style="margin-top: 0.5rem;">
+                    <li><strong>Enforced Security:</strong> Cannot bypass sanitization</li>
+                    <li><strong>Auditability:</strong> All sanitization is centralized in policies</li>
+                    <li><strong>Type Safety:</strong> Compile-time checking of trusted values</li>
+                    <li><strong>Future-Proof:</strong> Aligns with WebAssembly and other secure APIs</li>
+                    <li><strong>Gradual Adoption:</strong> Can be enabled report-only first</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Content Security Policy -->
+        <div class="card">
+            <h2 class="card-title csp">Content Security Policy (CSP)</h2>
+            <p>CSP is a powerful defense mechanism that helps prevent XSS attacks even when other protections fail. It provides an additional layer of security by controlling what resources a page can load and execute.</p>
+            
+            <div class="info">
+                <strong>How CSP Works:</strong> CSP acts as a security guard that checks every resource (scripts, images, styles, etc.) before allowing them to load. By default, CSP blocks potentially dangerous resources unless explicitly allowed by the policy.
+            </div>
+            
+            <h4>Basic CSP Example:</h4>
+            <div class="code-block">
+// HTTP Response Header
+Content-Security-Policy: default-src 'self'
+
+// What this allows/blocks:
+✅ &lt;script src="/js/app.js"&gt;&lt;/script&gt;  // Same domain
+❌ &lt;script src="https://evil.com/hack.js"&gt;&lt;/script&gt;  // External
+❌ &lt;script&gt;alert('hello')&lt;/script&gt;  // Inline script
+❌ &lt;div onclick="alert('hi')"&gt;&lt;/div&gt;  // Inline event handler
+            </div>
+            
+            <h4>CSP Directives Reference:</h4>
+            <div class="csp-directives">
+                <div class="directive-card">
+                    <div class="directive-name">default-src</div>
+                    <p>Fallback for other resource types when not specified</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">script-src</div>
+                    <p>Controls JavaScript sources and execution</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">style-src</div>
+                    <p>Controls CSS and style sources</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">img-src</div>
+                    <p>Controls image sources</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">connect-src</div>
+                    <p>Controls fetch(), XHR, WebSocket connections</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">frame-src</div>
+                    <p>Controls what can be embedded in iframes</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">base-uri</div>
+                    <p>Controls allowed URLs in &lt;base&gt; tags</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">form-action</div>
+                    <p>Controls where forms can submit to</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">frame-ancestors</div>
+                    <p>Controls which sites can embed your page</p>
+                </div>
+                
+                <div class="directive-card">
+                    <div class="directive-name">report-uri</div>
+                    <p>Where to send violation reports</p>
+                </div>
+            </div>
+            
+            <h4>Common CSP Values:</h4>
+            <div class="code-block">
+Content-Security-Policy:
+    script-src
+        'self'                    # Same origin
+        https://trusted.com       # Specific domain
+        *.trusted.com             # All subdomains
+        'unsafe-inline'           # Inline scripts (DANGEROUS!)
+        'unsafe-eval'             # eval(), new Function() (DANGEROUS!)
+        'nonce-random123'         # Specific inline scripts with nonce
+        'strict-dynamic'          # Trust scripts loaded by trusted scripts
+            </div>
+        </div>
+        
+        <!-- Complete CSP Example -->
+        <div class="demo-area">
+            <h3>🚀 Complete CSP Implementation Example</h3>
+            <p>A production-ready CSP for a website that needs to:</p>
+            
+            <ul class="step-list">
+                <li>Load its own resources</li>
+                <li>Use Google Analytics</li>
+                <li>Load images from a CDN</li>
+                <li>Prevent framing from other sites</li>
+                <li>Allow specific inline scripts with nonces</li>
+                <li>Enable Trusted Types for advanced protection</li>
+            </ul>
+            
+            <div class="code-block">
+// Production CSP Policy with Trusted Types
+Content-Security-Policy:
+    default-src 'self';
+    script-src 'self' 'nonce-random123' 
+                https://www.google-analytics.com 
+                https://ssl.google-analytics.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: https: 
+             https://www.google-analytics.com 
+             https://stats.g.doubleclick.net;
+    font-src 'self' data:;
+    connect-src 'self' 
+                https://www.google-analytics.com;
+    frame-ancestors 'none';
+    base-uri 'self';
+    form-action 'self';
+    object-src 'none';
+    upgrade-insecure-requests;
+    require-trusted-types-for 'script';  # Enable Trusted Types
+    trusted-types myPolicy;              # Only allow our policy
+
+// In your HTML templates
+&lt;script nonce="random123"&gt;
+  // This inline script is allowed
+  initializeApp();
+&lt;/script&gt;
+
+// Trusted Types policy definition (in a separate script)
+if (window.trustedTypes) {
+  trustedTypes.createPolicy('myPolicy', {
+    createHTML: (input) => DOMPurify.sanitize(input),
+    createScriptURL: (url) => {
+      // Validate URLs...
+      return url;
+    }
+  });
+}
+            </div>
+            
+            <div class="info">
+                <strong>💡 Gradual Implementation:</strong> Start with <code>Content-Security-Policy-Report-Only</code> to monitor violations without breaking your site, then switch to enforcing mode once all issues are resolved.
+            </div>
+        </div>
+        
+        <!-- Modern CSP Techniques -->
+        <div class="card">
+            <h2 class="card-title nonces">Modern CSP Best Practices</h2>
+            
+            <h4>1. Use Nonces for Inline Scripts</h4>
+            <div class="code-block">
+// Instead of 'unsafe-inline', use random nonces
+Content-Security-Policy: script-src 'nonce-random123456789'
+
+// In your server-side templates
+app.get('/', (req, res) => {
+  const nonce = crypto.randomBytes(16).toString('base64');
+  
+  res.send(`
+    &lt;script nonce="${nonce}"&gt;
+      // This script will execute
+      console.log('Hello from allowed script');
+    &lt;/script&gt;
+    
+    &lt;script&gt;
+      // This script will NOT execute (no nonce)
+      console.log('Blocked by CSP');
+    &lt;/script&gt;
+  `);
+});
+
+// An XSS attacker cannot predict the random nonce,
+// so they cannot inject a &lt;script&gt; tag that CSP will allow.
+            </div>
+            
+            <h4>2. Use strict-dynamic for Modern Applications</h4>
+            <div class="code-block">
+// Modern approach for complex applications
+Content-Security-Policy: 
+    script-src 'strict-dynamic' 'nonce-random123' 
+                https: 'unsafe-inline';
+    
+    // 'strict-dynamic' allows:
+    // - Scripts loaded by trusted scripts
+    // - Simplifies CSP policies
+    // - Better forward compatibility
+    
+// Example: Trusted script loading others
+&lt;script nonce="random123" src="/trusted-loader.js"&gt;&lt;/script&gt;
+
+// trusted-loader.js can then load other scripts dynamically
+const script = document.createElement('script');
+script.src = 'https://cdn.example.com/library.js';
+document.head.appendChild(script);  // ✅ Allowed by strict-dynamic
+            </div>
+            
+            <h4>3. Hash-based CSP for Static Content</h4>
+            <div class="code-block">
+// Use hashes for static inline scripts/styles
+Content-Security-Policy: 
+    script-src 'sha256-abc123...';
+
+// Calculate hash of your inline script
+const crypto = require('crypto');
+const scriptContent = "console.log('Hello World');";
+const hash = crypto
+  .createHash('sha256')
+  .update(scriptContent)
+  .digest('base64');
+
+// In HTML
+&lt;script&gt;
+  console.log('Hello World');  // Matches the hash
+&lt;/script&gt;
+
+&lt;script&gt;
+  alert('XSS');  // ❌ Doesn't match hash, blocked
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <!-- Security Headers Suite -->
+        <div class="card">
+            <h2 class="card-title headers">Complete Security Headers Suite</h2>
+            
+            <div class="code-block">
+// Express.js with Helmet - Complete security headers
+const express = require('express');
+const helmet = require('helmet');
+
+const app = express();
+
+app.use(helmet({
+  // Content Security Policy
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'nonce-random123'",
+        "https://www.google-analytics.com"
+      ],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  },
+  
+  // HTTP Strict Transport Security
+  hsts: {
+    maxAge: 31536000,  // 1 year
+    includeSubDomains: true,
+    preload: true
+  },
+  
+  // Referrer Policy
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  
+  // Other security headers
+  xContentTypeOptions: true,      // No MIME type sniffing
+  xFrameOptions: { action: 'deny' },  // No framing
+  xXssProtection: true,           // Legacy XSS protection
+  
+  // Permissions Policy (formerly Feature Policy)
+  permissionsPolicy: {
+    camera: ['none'],
+    microphone: ['none'],
+    geolocation: ['none'],
+    payment: ['none']
+  }
+}));
+            </div>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Header</th>
+                        <th>Purpose</th>
+                        <th>Example Value</th>
+                        <th>Protection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Content-Security-Policy</strong></td>
+                        <td>Control resource loading</td>
+                        <td><code>default-src 'self'</code></td>
+                        <td>XSS, data injection</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Strict-Transport-Security</strong></td>
+                        <td>Force HTTPS</td>
+                        <td><code>max-age=31536000</code></td>
+                        <td>SSL stripping, MITM</td>
+                    </tr>
+                    <tr>
+                        <td><strong>X-Frame-Options</strong></td>
+                        <td>Prevent clickjacking</td>
+                        <td><code>DENY</code></td>
+                        <td>Clickjacking</td>
+                    </tr>
+                    <tr>
+                        <td><strong>X-Content-Type-Options</strong></td>
+                        <td>Prevent MIME sniffing</td>
+                        <td><code>nosniff</code></td>
+                        <td>MIME confusion attacks</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Referrer-Policy</strong></td>
+                        <td>Control referrer info</td>
+                        <td><code>strict-origin-when-cross-origin</code></td>
+                        <td>Information leakage</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- HttpOnly Cookies -->
+        <div class="card">
+            <h2 class="card-title cookies">Secure Cookie Configuration</h2>
+            
+            <div class="code-block">
+// Secure session cookie configuration
+res.cookie('sessionId', sessionToken, {
+  httpOnly: true,     // Cannot be accessed by JavaScript
+  secure: true,       // Sent only over HTTPS
+  sameSite: 'strict', // Prevent CSRF
+  path: '/',
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  domain: 'yourdomain.com'
+});
+
+// What this protects against:
+✅ XSS stealing cookies via document.cookie
+✅ MITM attacks (HTTPS only)
+✅ CSRF attacks (SameSite)
+✅ Session fixation (maxAge)
+            </div>
+            
+            <div class="info">
+                <strong>🔒 Defense in Depth:</strong> Even if an XSS attack succeeds, HttpOnly cookies prevent the attacker from stealing session tokens via JavaScript. Combined with short session timeouts and SameSite attributes, this provides strong session protection.
+            </div>
+        </div>
+        
+        <!-- Final Checklist -->
+        <div class="demo-area">
+            <h3>✅ XSS Defense Checklist</h3>
+            
+            <div class="practice-grid">
+                <div class="practice-card">
+                    <h4>Input Handling</h4>
+                    <ul class="step-list">
+                        <li>✅ Validate all user input</li>
+                        <li>✅ Sanitize when necessary</li>
+                        <li>✅ Use parameterized queries</li>
+                        <li>✅ Implement rate limiting</li>
+                        <li>✅ Log suspicious input</li>
+                    </ul>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>Output Encoding</h4>
+                    <ul class="step-list">
+                        <li>✅ Escape at render time</li>
+                        <li>✅ Use context-aware encoding</li>
+                        <li>✅ Leverage framework features</li>
+                        <li>✅ Avoid dangerous APIs</li>
+                        <li>✅ Test encoding thoroughly</li>
+                    </ul>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>Security Headers</h4>
+                    <ul class="step-list">
+                        <li>✅ Implement CSP</li>
+                        <li>✅ Use HttpOnly cookies</li>
+                        <li>✅ Set security headers</li>
+                        <li>✅ Enable HSTS</li>
+                        <li>✅ Configure CORS properly</li>
+                    </ul>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>Modern APIs</h4>
+                    <ul class="step-list">
+                        <li>✅ Enable Trusted Types if supported</li>
+                        <li>✅ Use Subresource Integrity</li>
+                        <li>✅ Implement Permissions Policy</li>
+                        <li>✅ Use secure context APIs</li>
+                        <li>✅ Plan for future security features</li>
+                    </ul>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>Monitoring & Testing</h4>
+                    <ul class="step-list">
+                        <li>✅ Regular security scans</li>
+                        <li>✅ Monitor CSP violations</li>
+                        <li>✅ Conduct penetration tests</li>
+                        <li>✅ Stay updated on threats</li>
+                        <li>✅ Train development team</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-block" style="margin-top: 1rem;">
+// Quick security audit script
+const securityChecks = {
+  csp: checkCSPHeaders(),
+  trustedTypes: checkTrustedTypesSupport(),
+  cookies: checkCookieSecurity(),
+  dependencies: checkVulnerablePackages(),
+  xss: runXSSTests(),
+  headers: checkSecurityHeaders()
+};
+
+async function runSecurityAudit() {
+  console.log('🔍 Running Security Audit...');
+  
+  for (const [check, func] of Object.entries(securityChecks)) {
+    try {
+      const result = await func();
+      console.log(`${result.passed ? '✅' : '❌'} ${check}: ${result.message}`);
+    } catch (error) {
+      console.log(`⚠️ ${check}: ${error.message}`);
+    }
+  }
+  
+  console.log('🔒 Security audit completed');
+}
+            </div>
+        </div>
+        
+                <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Trusted Types demo (if supported)
+        function checkTrustedTypesSupport() {
+            if (window.trustedTypes) {
+                console.log('✅ Trusted Types API is supported in this browser');
+                
+                // Create a simple policy for demo
+                try {
+                    const policy = trustedTypes.createPolicy('demoPolicy', {
+                        createHTML: (input) => {
+                            // Simple sanitization for demo
+                            const div = document.createElement('div');
+                            div.textContent = input;
+                            return div.innerHTML;
+                        }
+                    });
+                    
+                    console.log('✅ Created Trusted Types policy: demoPolicy');
+                    return policy;
+                } catch (error) {
+                    console.log('⚠️ Could not create policy:', error.message);
+                }
+            } else {
+                console.log('ℹ️ Trusted Types API not supported in this browser');
+                console.log('Consider using a polyfill or alternative sanitization');
+            }
+            return null;
+        }
+        
+        // Educational console message
+        console.log(`
+        XSS Defense Best Practices - Summary:
+        
+        1. ESCAPE AT RENDER TIME:
+           - Never escape when storing data
+           - Use context-aware encoding
+           - Preserve raw data for multiple uses
+        
+        2. LEVERAGE FRAMEWORKS:
+           - Use built-in XSS protection
+           - Be careful with dangerous APIs
+           - Combine with sanitization libraries
+        
+        3. TRUSTED TYPES (Future):
+           - Enforced sanitization for dangerous APIs
+           - Centralized security policies
+           - Browser-native XSS prevention
+        
+        4. IMPLEMENT CSP:
+           - Use nonces for inline scripts
+           - Start with report-only mode
+           - Combine with other security headers
+        
+        5. SECURE CONFIGURATION:
+           - HttpOnly, Secure, SameSite cookies
+           - Complete security headers suite
+           - Regular security testing
+        
+        Remember: Defense in depth is the key to security!
+        `);
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkTrustedTypesSupport();
+            
+            // CSP nonce simulation
+            function generateNonce() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let nonce = '';
+                for (let i = 0; i < 32; i++) {
+                    nonce += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return nonce;
+            }
+            
+            const nonce = generateNonce();
+            console.log('Generated CSP nonce example:', nonce);
+            console.log('This nonce would be used in CSP header and script tags.');
+        });
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

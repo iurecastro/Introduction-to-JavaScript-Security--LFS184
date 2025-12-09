@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Other Server Risks - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .chapter-header {
+            background: #ff9f43;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .chapter-number {
+            background: white;
+            color: #ff9f43;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .content-grid {
+            display: grid;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+        }
+        
+        .card-title.ssrf { border-bottom-color: #4a6491; }
+        .card-title.redos { border-bottom-color: #ff6b6b; }
+        .card-title.comparison { border-bottom-color: #ff9f43; }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #ff9f43;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .topic-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .topic-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-top: 4px solid;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .topic-card.ssrf {
+            border-top-color: #4a6491;
+        }
+        
+        .topic-card.redos {
+            border-top-color: #ff6b6b;
+        }
+        
+        .topic-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .topic-card p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .topic-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .topic-icon.ssrf { background: #4a6491; }
+        .topic-icon.redos { background: #ff6b6b; }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .nav-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-button.prev {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .nav-button.next {
+            background: #4a6491;
+            color: white;
+        }
+        
+        .nav-button:hover {
+            transform: translateX(-5px);
+            opacity: 0.9;
+        }
+        
+        .nav-button.next:hover {
+            transform: translateX(5px);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .key-points {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .key-point {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #4a6491;
+        }
+        
+        .key-point h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .topic-links {
+                grid-template-columns: 1fr;
+            }
+            
+            .key-points {
+                grid-template-columns: 1fr;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>           
+            <h1>Other Server Risks</h1>
+            <p class="subtitle">Internal Threats and Unseen Attacks: SSRF and ReDoS</p>
+        </header>
+        
+        
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">Why Study These Vulnerabilities?</h2>
+                
+                <div class="key-points">
+                    <div class="key-point">
+                        <h4>🔄 SSRF: The Internal Network Threat</h4>
+                        <p>Attackers abuse server functionality to access internal networks, bypassing firewalls and accessing sensitive internal services.</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <h4>⏱️ ReDoS: The Performance Killer</h4>
+                        <p>Malicious inputs cause regex patterns to take exponential time, blocking the Node.js event loop and causing denial of service.</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <h4>🎯 Hard to Detect</h4>
+                        <p>Both vulnerabilities often hide in unexpected places: image processing, URL redirects, video conversion, and input validation.</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <h4>☁️ Cloud-Scale Impact</h4>
+                        <p>SSRF is particularly dangerous in cloud environments where metadata services contain credentials and configuration.</p>
+                    </div>
+                </div>
+                
+                <div class="info">
+                    <strong>Real-World Impact:</strong> These vulnerabilities have caused major outages at companies like Cloudflare and exposed internal networks at organizations like Grafana and TikTok.
+                </div>
+            </div>
+            
+            <div class="topic-links">
+                <a href="server-side-request-forgery-SSRF.html" class="topic-card ssrf">
+                    <h3>
+                        <div class="topic-icon ssrf">SSRF</div>
+                        Server-Side Request Forgery
+                    </h3>
+                    <p>Learn how attackers make servers request internal resources, bypass firewalls, and access cloud metadata services. Complete with real-world examples from Grafana and TikTok.</p>
+                    <p><strong>Key Topics:</strong> Cloud metadata attacks, FFmpeg vulnerabilities, open redirect exploitation, prevention techniques.</p>
+                </a>
+                
+                <a href="https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/#appendix-about-regular-expression-backtracking" target="_blank" class="topic-card redos">
+                    <h3>
+                        <div class="topic-icon redos">ReDoS</div>
+                        Regular Expression Denial of Service
+                    </h3>
+                    <p>Understand catastrophic backtracking, exponential time regex patterns, and how a single malicious input can crash your entire Node.js server.</p>
+                    <p><strong>Key Topics:</strong> Cloudflare outage case study, safe regex patterns, Node.js engine flags, detection tools.</p>
+                </a>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title comparison">Comparative Analysis: SSRF vs ReDoS</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Server-Side Request Forgery (SSRF)</th>
+                            <th>Regular Expression Denial of Service (ReDoS)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Primary Impact</strong></td>
+                            <td>Data exposure, internal network access</td>
+                            <td>Service availability, performance degradation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Attack Vector</strong></td>
+                            <td>URL parameters, file uploads, redirects</td>
+                            <td>User input, form fields, API parameters</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exploitation Difficulty</strong></td>
+                            <td>Medium (requires understanding of internal network)</td>
+                            <td>Low (automated tools can generate payloads)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Detection Difficulty</strong></td>
+                            <td>High (often in unexpected features)</td>
+                            <td>Medium (performance monitoring can detect)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prevention Strategy</strong></td>
+                            <td>Input validation, network segmentation, authentication</td>
+                            <td>Safe regex patterns, timeouts, linear engines</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cloud Impact</strong></td>
+                            <td>HIGH (metadata service access)</td>
+                            <td>MEDIUM (scalability affected)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Common Attack Scenarios</h2>
+                
+                <h3 style="color: #4a6491; margin-top: 1.5rem;">SSRF Attack Chain:</h3>
+                <ol class="step-list">
+                    <li>Attacker finds vulnerable endpoint (PDF generator, image processor)</li>
+                    <li>Crafts payload with internal URL (metadata service, database)</li>
+                    <li>Server processes request and fetches internal resource</li>
+                    <li>Internal data returned to attacker (or sent to their server)</li>
+                    <li>Attacker escalates access using obtained credentials</li>
+                </ol>
+                
+                <h3 style="color: #ff6b6b; margin-top: 1.5rem;">ReDoS Attack Chain:</h3>
+                <ol class="step-list">
+                    <li>Attacker identifies regex used for input validation</li>
+                    <li>Crafts pathological input causing exponential backtracking</li>
+                    <li>Sends malicious request to vulnerable endpoint</li>
+                    <li>Regex engine consumes 100% CPU on main thread</li>
+                    <li>Entire server becomes unresponsive to all requests</li>
+                </ol>
+                
+                <div class="warning">
+                    <strong>Note:</strong> Both attacks can be automated and scaled. A single ReDoS payload can take down a server, while SSRF can be used to scan entire internal networks.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Integrated Prevention Strategy</h2>
+                
+                <div class="info">
+                    <strong>Defense in Depth:</strong> Combine multiple protection layers for both SSRF and ReDoS vulnerabilities.
+                </div>
+                
+                <h3 style="margin-top: 1.5rem; color: #2c3e50;">Layer 1: Input Validation</h3>
+                <div class="code-block">
+// Comprehensive input validation
+function validateUserInput(input, options = {}) {
+  // Length limits (prevents ReDoS)
+  if (input.length > options.maxLength || 1000) {
+    throw new Error('Input too long');
+  }
+  
+  // URL validation (prevents SSRF)
+  if (options.isUrl) {
+    try {
+      const url = new URL(input);
+      
+      // Block internal/reserved addresses
+      const internalIps = [
+        'localhost', '127.0.0.1', '::1',
+        '192.168.', '10.', '169.254.', '172.16.'
+      ];
+      
+      if (internalIps.some(ip => url.hostname.startsWith(ip))) {
+        throw new Error('Internal URLs not allowed');
+      }
+      
+      // Allowlist domains
+      if (options.allowedDomains) {
+        const allowed = options.allowedDomains.some(domain => 
+          url.hostname === domain || url.hostname.endsWith('.' + domain)
+        );
+        if (!allowed) throw new Error('Domain not allowed');
+      }
+    } catch {
+      throw new Error('Invalid URL');
+    }
+  }
+  
+  return true;
+}
+                </div>
+                
+                <h3 style="margin-top: 1.5rem; color: #2c3e50;">Layer 2: Safe Processing</h3>
+                <ul class="step-list">
+                    <li><strong>For SSRF:</strong> Use isolated containers, disable redirects, implement outbound proxies</li>
+                    <li><strong>For ReDoS:</strong> Use linear regex engine, set timeouts, use worker threads</li>
+                    <li><strong>Common:</strong> Rate limiting, request timeouts, resource quotas</li>
+                </ul>
+                
+                <h3 style="margin-top: 1.5rem; color: #2c3e50;">Layer 3: Monitoring & Response</h3>
+                <ul class="step-list">
+                    <li>Monitor CPU usage for regex operations</li>
+                    <li>Log all outbound network requests</li>
+                    <li>Implement circuit breakers for failed operations</li>
+                    <li>Use WAF rules for known attack patterns</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Real-World Case Studies</h2>
+                
+                <div class="key-points">
+                    <div class="key-point">
+                        <h4>📈 Grafana SSRF (CVE-2020-13379)</h4>
+                        <p>Avatar endpoint vulnerability allowed attackers to access internal networks through Gravatar and WordPress redirect chains.</p>
+                        <p><strong>Impact:</strong> Full internal network access from unauthenticated users.</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <h4>🎵 TikTok FFmpeg SSRF</h4>
+                        <p>Video upload processing with FFmpeg allowed HLS playlists to make internal network requests.</p>
+                        <p><strong>Impact:</strong> Internal service enumeration and data exfiltration.</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <h4>☁️ Cloudflare ReDoS Outage</h4>
+                        <p>Catastrophic backtracking in WAF regex caused global outage affecting millions of users.</p>
+                        <p><strong>Impact:</strong> 27-minute global service disruption.</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <h4>🔐 AWS Metadata Service Attacks</h4>
+                        <p>SSRF vulnerabilities often target cloud metadata services to steal temporary credentials.</p>
+                        <p><strong>Impact:</strong> Complete cloud account compromise.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Learning Objectives Checklist</h2>
+                
+                <ul class="step-list">
+                    <li>✅ Understand how SSRF allows internal network access</li>
+                    <li>✅ Recognize SSRF vectors beyond direct URL parameters</li>
+                    <li>✅ Implement SSRF prevention: validation, isolation, authentication</li>
+                    <li>✅ Identify regex patterns susceptible to catastrophic backtracking</li>
+                    <li>✅ Understand why ReDoS is particularly dangerous in Node.js</li>
+                    <li>✅ Implement ReDoS prevention: safe patterns, timeouts, engine flags</li>
+                    <li>✅ Apply defense-in-depth strategies for both vulnerabilities</li>
+                    <li>✅ Analyze real-world case studies and learn from past incidents</li>
+                </ul>
+                
+                <div class="info" style="margin-top: 1.5rem;">
+                    <strong>Next Steps:</strong> Practice identifying these vulnerabilities in code reviews, implement the prevention techniques in your projects, and consider security testing for both SSRF and ReDoS in your applications.
+                </div>
+            </div>
+        </div>
+        
+        
+               <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

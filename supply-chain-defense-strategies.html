@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain Defense Strategies - JavaScript Security Suite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .protection-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .protection-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .method-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .method-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .method-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .method-title.lockfiles { border-bottom-color: #4ecdc4; }
+        .method-title.minimize { border-bottom-color: #ff9f43; }
+        .method-title.scanning { border-bottom-color: #5f27cd; }
+        .method-title.automation { border-bottom-color: #1dd1a1; }
+        .method-title.verification { border-bottom-color: #ff6b6b; }
+        .method-title.education { border-bottom-color: #54a0ff; }
+        
+        .method-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .method-steps {
+            flex-grow: 1;
+            margin-bottom: 1.5rem;
+        }
+        
+        .method-step {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .method-step:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4a6491;
+            font-weight: bold;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .implementation-demo {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .implementation-title {
+            color: #495057;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .tool-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #5f27cd;
+        }
+        
+        .tool-name {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .tool-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tool-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .tool-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .checklist {
+            background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .checklist h3 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .checklist-item {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .checklist-item:before {
+            content: "☑";
+            position: absolute;
+            left: 0;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin: 3rem 0;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .nav-button {
+            background: #4a6491;
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-button:hover {
+            background: #3a5379;
+        }
+        
+        .nav-button.next {
+            background: #5f27cd;
+        }
+        
+        .nav-button.next:hover {
+            background: #4a1da6;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .pros {
+            background: #d4edda;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        
+        .cons {
+            background: #f8d7da;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        
+        .pros h4, .cons h4 {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Supply Chain Defense Strategies</h1>
+            <p class="subtitle">Practical protection techniques against dependency attacks</p>
+        </header>
+        
+        <div class="protection-methods">
+            <div class="method-card">
+                <div class="method-icon">🔒</div>
+                <h2 class="method-title lockfiles">1. Use Lockfiles and Precise Versions</h2>
+                
+                <div class="method-steps">
+                    <p>Lockfiles ensure reproducible builds and prevent unexpected dependency changes.</p>
+                    
+                    <div class="method-step">Commit package-lock.json to version control</div>
+                    <div class="method-step">Use exact versions in package.json (avoid ^ or ~)</div>
+                    <div class="method-step">Enable CI checks for lockfile consistency</div>
+                    <div class="method-step">Regularly update dependencies with audit</div>
+                </div>
+                
+                <div class="code-block">
+// package.json - Use exact versions
+{
+  "dependencies": {
+    "express": "4.18.2",  // Exact version
+    "lodash": "4.17.21"   // Not "^4.17.21"
+  }
+}
+
+// package-lock.json ensures reproducibility
+// Always commit this file!
+                </div>
+                
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Pros:</h4>
+                        <ul>
+                            <li>Prevents "dependency drift"</li>
+                            <li>Ensures all environments are identical</li>
+                            <li>Mitigates dependency confusion attacks</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>⚠️ Cons:</h4>
+                        <ul>
+                            <li>Manual dependency updates required</li>
+                            <li>Larger version control diffs</li>
+                            <li>Potential for outdated dependencies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="method-card">
+                <div class="method-icon">📦</div>
+                <h2 class="method-title minimize">2. Minimize Dependencies</h2>
+                
+                <div class="method-steps">
+                    <p>Reduce attack surface by minimizing both direct and transitive dependencies.</p>
+                    
+                    <div class="method-step">Regularly audit and remove unused dependencies</div>
+                    <div class="method-step">Prefer smaller, focused packages</div>
+                    <div class="method-step">Evaluate dependency maintenance status</div>
+                    <div class="method-step">Consider alternative implementations</div>
+                </div>
+                
+                <div class="implementation-demo">
+                    <div class="implementation-title">🔧 Using depcheck to find unused dependencies:</div>
+                    <div class="code-block">
+# Install depcheck
+npm install -g depcheck
+
+# Check for unused dependencies
+depcheck
+
+# Output shows unused dependencies:
+Unused dependencies: 
+* axios
+* moment
+* underscore
+
+Unused devDependencies:
+* mocha
+* chai
+                    </div>
+                </div>
+            </div>
+            
+            <div class="method-card">
+                <div class="method-icon">🔍</div>
+                <h2 class="method-title scanning">3. Use Scanning and Monitoring Tools</h2>
+                
+                <div class="method-steps">
+                    <p>Automated tools can detect vulnerabilities and suspicious behavior.</p>
+                    
+                    <div class="method-step">Integrate scanning into CI/CD pipelines</div>
+                    <div class="method-step">Use both CVE-based and behavioral analysis</div>
+                    <div class="method-step">Monitor for package behavior changes</div>
+                    <div class="method-step">Set up automated security alerts</div>
+                </div>
+                
+                <div class="code-block">
+# GitHub Actions workflow for security scanning
+name: Security Scan
+on: [push, pull_request]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run npm audit
+        run: npm audit
+        
+      - name: Run Socket scan
+        run: npx socket-cli@latest analyze .
+        
+      - name: Check for typosquats
+        uses: socketsecurity/github-action@main
+                </div>
+            </div>
+            
+            <div class="method-card">
+                <div class="method-icon">🤖</div>
+                <h2 class="method-title automation">4. Implement Automation</h2>
+                
+                <div class="method-steps">
+                    <p>Automate security checks to catch issues early.</p>
+                    
+                    <div class="method-step">Pre-commit hooks for dependency validation</div>
+                    <div class="method-step">CI/CD pipeline security gates</div>
+                    <div class="method-step">Automated dependency updates (Dependabot)</div>
+                    <div class="method-step">Deployment approval workflows</div>
+                </div>
+                
+                <div class="implementation-demo">
+                    <div class="implementation-title">⚙️ GitHub Dependabot Configuration:</div>
+                    <div class="code-block">
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+      - "security"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "security-team"
+                    </div>
+                </div>
+            </div>
+            
+            <div class="method-card">
+                <div class="method-icon">✅</div>
+                <h2 class="method-title verification">5. Verification and Signing</h2>
+                
+                <div class="method-steps">
+                    <p>Verify package integrity and authenticity.</p>
+                    
+                    <div class="method-step">Use package signing (Sigstore, GPG)</div>
+                    <div class="method-step">Verify checksums and signatures</div>
+                    <div class="method-step">Implement artifact provenance</div>
+                    <div class="method-step">Use SBOM (Software Bill of Materials)</div>
+                </div>
+                
+                <div class="code-block">
+# Verifying package integrity with npm
+npm install --verify
+
+# Checking package signatures
+npm audit signatures
+
+# Generating SBOM
+npx @cyclonedx/cyclonedx-npm --output-file sbom.json
+                </div>
+            </div>
+            
+            <div class="method-card">
+                <div class="method-icon">🎓</div>
+                <h2 class="method-title education">6. Team Education and Process</h2>
+                
+                <div class="method-steps">
+                    <p>Security is a team responsibility.</p>
+                    
+                    <div class="method-step">Regular security training sessions</div>
+                    <div class="method-step">Clear dependency adoption policies</div>
+                    <div class="method-step">Incident response plans for supply chain attacks</div>
+                    <div class="method-step">Security champions program</div>
+                </div>
+                
+                <div class="implementation-demo">
+                    <div class="implementation-title">📋 Dependency Adoption Checklist:</div>
+                    <div class="code-block">
+✅ Package has active maintainers
+✅ Regular releases and updates
+✅ Good security track record
+✅ No known critical vulnerabilities
+✅ Clear license (MIT, Apache 2.0)
+✅ Good documentation and community
+✅ Small dependency tree
+✅ No suspicious install scripts
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tool-grid">
+            <h2 style="grid-column: 1 / -1; color: #2c3e50; margin-bottom: 1rem;">🛠️ Recommended Security Tools</h2>
+            
+            <div class="tool-card">
+                <div class="tool-name">Socket</div>
+                <div class="tool-description">Detects and blocks supply chain attacks before they happen using behavioral analysis.</div>
+                <div class="tool-tags">
+                    <span class="tool-tag">Real-time scanning</span>
+                    <span class="tool-tag">Behavioral analysis</span>
+                    <span class="tool-tag">Typosquat detection</span>
+                </div>
+            </div>
+            
+            <div class="tool-card">
+                <div class="tool-name">Snyk</div>
+                <div class="tool-description">Finds and fixes vulnerabilities in dependencies, containers, and infrastructure as code.</div>
+                <div class="tool-tags">
+                    <span class="tool-tag">Vulnerability scanning</span>
+                    <span class="tool-tag">Fix PRs</span>
+                    <span class="tool-tag">CI/CD integration</span>
+                </div>
+            </div>
+            
+            <div class="tool-card">
+                <div class="tool-name">Dependabot</div>
+                <div class="tool-description">Automatically creates pull requests to keep dependencies secure and up-to-date.</div>
+                <div class="tool-tags">
+                    <span class="tool-tag">Automated updates</span>
+                    <span class="tool-tag">GitHub native</span>
+                    <span class="tool-tag">Security alerts</span>
+                </div>
+            </div>
+            
+            <div class="tool-card">
+                <div class="tool-name">OSS-Fuzz</div>
+                <div class="tool-description">Continuous fuzzing for open source software to find vulnerabilities.</div>
+                <div class="tool-tags">
+                    <span class="tool-tag">Fuzzing</span>
+                    <span class="tool-tag">Google project</span>
+                    <span class="tool-tag">CVE detection</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="checklist">
+            <h3>✅ Supply Chain Security Checklist</h3>
+            <div class="checklist-item">Use and commit lockfiles (package-lock.json)</div>
+            <div class="checklist-item">Enable 2FA for all package registry accounts</div>
+            <div class="checklist-item">Implement automated dependency scanning in CI/CD</div>
+            <div class="checklist-item">Regularly audit and minimize dependencies</div>
+            <div class="checklist-item">Use scope-specific registries for internal packages</div>
+            <div class="checklist-item">Educate team about supply chain risks</div>
+            <div class="checklist-item">Have an incident response plan for supply chain attacks</div>
+            <div class="checklist-item">Monitor for suspicious package behavior</div>
+        </div>
+        
+        
+        
+               <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Prism.highlightAll();
+            
+            // Add interactive functionality to method cards
+            document.querySelectorAll('.method-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    this.style.boxShadow = '0 8px 15px rgba(0,0,0,0.1)';
+                    setTimeout(() => {
+                        this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)';
+                    }, 300);
+                });
+            });
+            
+            // Console log educational message
+            console.log(`
+            Supply Chain Defense Strategies - Key Recommendations:
+            
+            1. Lockfiles: Always commit package-lock.json
+            2. Minimization: Regularly audit and reduce dependencies
+            3. Scanning: Implement automated security scanning
+            4. Automation: Use tools like Dependabot
+            5. Verification: Check package integrity and signatures
+            6. Education: Train team on supply chain risks
+            
+            Defense in depth is crucial for supply chain security!
+            `);
+        });
+    </script>
+</body>
+</html>

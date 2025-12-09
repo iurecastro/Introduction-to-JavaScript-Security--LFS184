@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Prevention & Tools - Complete Defense Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* Layout System - Consistent with all pages */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .card-title.encoding { border-bottom-color: #ff6b6b; }
+        .card-title.validation { border-bottom-color: #4ecdc4; }
+        .card-title.csp { border-bottom-color: #45b7d1; }
+        .card-title.tools { border-bottom-color: #96ceb4; }
+        .card-title.frameworks { border-bottom-color: #ff9ff3; }
+        .card-title.advanced { border-bottom-color: #feca57; }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .tool-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tool-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #4a6491;
+        }
+        
+        .tool-card h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tool-card p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tool-tag {
+            display: inline-block;
+            background: #4a6491;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .checklist {
+            background: #e8f5e9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #c8e6c9;
+        }
+        
+        .checklist-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .checkmark {
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .tab-container {
+            margin: 1.5rem 0;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #4a6491;
+            border-bottom: 3px solid #4a6491;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .demo-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>           
+            <h1>XSS Prevention & Tools</h1>
+            <p class="subtitle">Complete Guide to XSS Defense Strategies and Security Tools</p>
+        </header>
+        
+        <!-- Defense in Depth Overview -->
+        <div class="card">
+            <h2 class="card-title">Defense in Depth Strategy</h2>
+            <p>Effective XSS prevention requires multiple layers of defense. No single technique is sufficient against all attack vectors.</p>
+            
+            <div class="checklist">
+                <h3>✅ Multi-Layer Defense Checklist</h3>
+                
+                <div class="checklist-item">
+                    <div class="checkmark">✓</div>
+                    <div>
+                        <strong>Layer 1: Input Validation</strong>
+                        <p>Validate and sanitize ALL user input at the boundary</p>
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checkmark">✓</div>
+                    <div>
+                        <strong>Layer 2: Output Encoding</strong>
+                        <p>Context-aware encoding when displaying data</p>
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checkmark">✓</div>
+                    <div>
+                        <strong>Layer 3: Content Security Policy</strong>
+                        <p>Restrict script sources and inline script execution</p>
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checkmark">✓</div>
+                    <div>
+                        <strong>Layer 4: HttpOnly Cookies</strong>
+                        <p>Prevent JavaScript access to sensitive cookies</p>
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checkmark">✓</div>
+                    <div>
+                        <strong>Layer 5: Security Headers</strong>
+                        <p>Additional HTTP headers for protection</p>
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checkmark">✓</div>
+                    <div>
+                        <strong>Layer 6: Regular Testing</strong>
+                        <p>Continuous security testing and code reviews</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Security Policy -->
+        <div class="card">
+            <h2 class="card-title csp">Content Security Policy (CSP)</h2>
+            <p>CSP is a critical security layer that restricts sources of scripts, styles, and other resources.</p>
+            
+            <h4>Strict CSP Configuration:</h4>
+            <div class="code-block">
+// HTTP Header
+Content-Security-Policy: 
+  default-src 'self';
+  script-src 'self';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https:;
+  font-src 'self';
+  connect-src 'self';
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+  object-src 'none';
+  script-src-attr 'none';
+  upgrade-insecure-requests;
+            </div>
+            
+            <h4>Implementing CSP in Express.js:</h4>
+            <div class="code-block">
+const express = require('express');
+const helmet = require('helmet');
+
+const app = express();
+
+// Basic CSP with Helmet
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: [
+      "'self'",
+      "'sha256-abc123...'" // Hash of inline script
+    ],
+    styleSrc: ["'self'", "'unsafe-inline'"],
+    imgSrc: ["'self'", "data:", "https:"],
+    fontSrc: ["'self'"],
+    connectSrc: ["'self'"],
+    frameSrc: ["'none'"],
+    objectSrc: ["'none'"],
+    upgradeInsecureRequests: [],
+  },
+  reportOnly: false // Enforce, don't just report
+}));
+
+// For development, use report-only mode first
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    // ... other directives
+  },
+  reportOnly: true, // Only report violations
+  reportUri: '/csp-violation-report'
+}));
+
+app.post('/csp-violation-report', (req, res) => {
+  console.log('CSP Violation:', req.body);
+  res.status(204).end();
+});
+            </div>
+            
+            <div class="info">
+                <strong>🔍 CSP Benefits:</strong>
+                <ul style="margin-top: 0.5rem;">
+                    <li>Prevents inline script execution</li>
+                    <li>Blocks eval() and similar functions</li>
+                    <li>Restricts external script sources</li>
+                    <li>Prevents clickjacking with frame-ancestors</li>
+                    <li>Helps detect XSS attempts via violation reports</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Security Tools -->
+        <div class="card">
+            <h2 class="card-title tools">XSS Security Tools</h2>
+            
+            <div class="tool-grid">
+                <div class="tool-card">
+                    <div class="tool-icon">🛡️</div>
+                    <h4>DOMPurify</h4>
+                    <p>HTML sanitizer that prevents XSS by cleaning HTML</p>
+                    <div>
+                        <span class="tool-tag">npm</span>
+                        <span class="tool-tag">browser</span>
+                    </div>
+                    <div class="code-block" style="font-size: 0.8rem; margin-top: 1rem;">
+npm install dompurify
+import DOMPurify from 'dompurify';
+const clean = DOMPurify.sanitize(dirtyHTML);
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🔍</div>
+                    <h4>OWASP ZAP</h4>
+                    <p>Free security scanner for finding XSS vulnerabilities</p>
+                    <div>
+                        <span class="tool-tag">scanner</span>
+                        <span class="tool-tag">automated</span>
+                        <span class="tool-tag">free</span>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">⚙️</div>
+                    <h4>ESLint Security</h4>
+                    <p>ESLint plugin for detecting security issues</p>
+                    <div>
+                        <span class="tool-tag">npm</span>
+                        <span class="tool-tag">linting</span>
+                        <span class="tool-tag">prevention</span>
+                    </div>
+                    <div class="code-block" style="font-size: 0.8rem; margin-top: 1rem;">
+npm install eslint-plugin-security
+// .eslintrc.js
+plugins: ['security'],
+rules: {
+  'security/detect-object-injection': 'error'
+}
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🔧</div>
+                    <h4>Helmet.js</h4>
+                    <p>Express.js security middleware with CSP support</p>
+                    <div>
+                        <span class="tool-tag">express</span>
+                        <span class="tool-tag">middleware</span>
+                        <span class="tool-tag">headers</span>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">📊</div>
+                    <h4>Burp Suite</h4>
+                    <p>Professional web vulnerability scanner</p>
+                    <div>
+                        <span class="tool-tag">professional</span>
+                        <span class="tool-tag">testing</span>
+                        <span class="tool-tag">manual</span>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🔄</div>
+                    <h4>js-xss</h4>
+                    <p>Another HTML sanitizer for Node.js and browser</p>
+                    <div>
+                        <span class="tool-tag">npm</span>
+                        <span class="tool-tag">sanitizer</span>
+                        <span class="tool-tag">xss</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modern Frameworks Section -->
+        <div class="card">
+            <h2 class="card-title frameworks">Modern Framework Protection</h2>
+            
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="react">React</button>
+                    <button class="tab" data-tab="vue">Vue.js</button>
+                    <button class="tab" data-tab="angular">Angular</button>
+                    <button class="tab" data-tab="svelte">Svelte</button>
+                </div>
+                
+                <div id="react" class="tab-content active">
+                    <h4>React XSS Protection</h4>
+                    <p>React automatically escapes content in JSX, but there are still risks:</p>
+                    
+                    <div class="code-block">
+// SAFE - React auto-escapes
+function Welcome({ name }) {
+  return &lt;div&gt;Hello, {name}&lt;/div&gt;;
+  // If name = '&lt;script&gt;alert(1)&lt;/script&gt;'
+  // Output: Hello, &amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;
+}
+
+// DANGEROUS - dangerouslySetInnerHTML
+function Dangerous({ html }) {
+  return &lt;div dangerouslySetInnerHTML={{ __html: html }} /&gt;;
+}
+
+// SAFE - With sanitization
+import DOMPurify from 'dompurify';
+
+function SafeHTML({ html }) {
+  const cleanHTML = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a'],
+    ALLOWED_ATTR: ['href', 'title']
+  });
+  
+  return &lt;div dangerouslySetInnerHTML={{ __html: cleanHTML }} /&gt;;
+}
+                    </div>
+                </div>
+                
+                <div id="vue" class="tab-content">
+                    <h4>Vue.js XSS Protection</h4>
+                    <p>Vue.js provides built-in XSS protection with v-html directive:</p>
+                    
+                    <div class="code-block">
+// Vue.js template
+&lt;template&gt;
+  &lt;!-- SAFE - Text interpolation --&gt;
+  &lt;div&gt;{{ userContent }}&lt;/div&gt;
+  
+  &lt;!-- DANGEROUS - v-html without sanitization --&gt;
+  &lt;div v-html="userContent"&gt;&lt;/div&gt;
+  
+  &lt;!-- SAFE - With sanitization --&gt;
+  &lt;div v-html="sanitizedContent"&gt;&lt;/div&gt;
+&lt;/template&gt;
+
+// Vue.js script
+import DOMPurify from 'dompurify';
+
+export default {
+  data() {
+    return {
+      userContent: 'user input'
+    };
+  },
+  computed: {
+    sanitizedContent() {
+      return DOMPurify.sanitize(this.userContent, {
+        ALLOWED_TAGS: [],
+        ALLOWED_ATTR: []
+      });
+    }
+  }
+};
+                    </div>
+                </div>
+                
+                <div id="angular" class="tab-content">
+                    <h4>Angular XSS Protection</h4>
+                    <p>Angular has built-in sanitization for different contexts:</p>
+                    
+                    <div class="code-block">
+import { Component } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+@Component({
+  selector: 'app-root',
+  template: `
+    &lt;!-- SAFE - Interpolation --&gt;
+    &lt;div&gt;{{ userContent }}&lt;/div&gt;
+    
+    &lt;!-- DANGEROUS - innerHTML binding --&gt;
+    &lt;div [innerHTML]="userContent"&gt;&lt;/div&gt;
+    
+    &lt;!-- SAFE - With sanitization --&gt;
+    &lt;div [innerHTML]="safeContent"&gt;&lt;/div&gt;
+  `
+})
+export class AppComponent {
+  userContent = 'user input';
+  safeContent: SafeHtml;
+  
+  constructor(private sanitizer: DomSanitizer) {
+    this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
+      this.sanitizer.sanitize(1, this.userContent) || ''
+    );
+  }
+}
+                    </div>
+                </div>
+                
+                <div id="svelte" class="tab-content">
+                    <h4>Svelte XSS Protection</h4>
+                    <p>Svelte provides different context for safe and unsafe HTML:</p>
+                    
+                    <div class="code-block">
+// Svelte component
+&lt;script&gt;
+  import DOMPurify from 'dompurify';
+  let userContent = 'user input';
+  
+  function sanitize(html) {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong'],
+      ALLOWED_ATTR: []
+    });
+  }
+&lt;/script&gt;
+
+&lt;!-- SAFE - Text content --&gt;
+&lt;div&gt;{userContent}&lt;/div&gt;
+
+&lt;!-- DANGEROUS - @html directive --&gt;
+&lt;div&gt;{@html userContent}&lt;/div&gt;
+
+&lt;!-- SAFE - With sanitization --&gt;
+&lt;div&gt;{@html sanitize(userContent)}&lt;/div&gt;
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Techniques -->
+        <div class="card">
+            <h2 class="card-title advanced">Advanced Prevention Techniques</h2>
+            
+            <h4>1. Subresource Integrity (SRI)</h4>
+            <p>Ensure third-party scripts haven't been tampered with:</p>
+            
+            <div class="code-block">
+&lt;!-- With integrity hash --&gt;
+&lt;script 
+  src="https://cdn.example.com/library.js"
+  integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
+  crossorigin="anonymous"&gt;
+&lt;/script&gt;
+
+// Generating integrity hash
+const crypto = require('crypto');
+const fs = require('fs');
+
+const fileBuffer = fs.readFileSync('library.js');
+const hash = crypto.createHash('sha384');
+hash.update(fileBuffer);
+const integrity = 'sha384-' + hash.digest('base64');
+            </div>
+            
+            <h4>2. Security Headers Suite</h4>
+            
+            <div class="code-block">
+// Complete security headers setup
+app.use(helmet({
+  contentSecurityPolicy: { /* ... */ },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  xContentTypeOptions: true,
+  xFrameOptions: { action: 'deny' },
+  xXssProtection: true,
+  permissionsPolicy: {
+    camera: ['none'],
+    microphone: ['none'],
+    geolocation: ['none']
+  }
+}));
+            </div>
+        </div>
+        
+        <!-- Testing & Validation -->
+        <div class="card">
+            <h3>🧪 Testing & Validation Checklist</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 1rem;">
+                <div class="demo-form">
+                    <h4>Automated Testing</h4>
+                    <ul class="step-list">
+                        <li>✅ Run OWASP ZAP or Burp Suite scans</li>
+                        <li>✅ Use Snyk or npm audit for dependencies</li>
+                        <li>✅ Implement CI/CD security scanning</li>
+                        <li>✅ Use ESLint security plugin</li>
+                        <li>✅ Run dependency-check regularly</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-form">
+                    <h4>Manual Testing</h4>
+                    <ul class="step-list">
+                        <li>✅ Test all user input points</li>
+                        <li>✅ Try XSS payloads in different contexts</li>
+                        <li>✅ Test encoding bypass techniques</li>
+                        <li>✅ Verify CSP headers are working</li>
+                        <li>✅ Check for DOM-based XSS</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-form">
+                    <h4>Continuous Monitoring</h4>
+                    <ul class="step-list">
+                        <li>✅ Monitor CSP violation reports</li>
+                        <li>✅ Log and review security incidents</li>
+                        <li>✅ Regular penetration testing</li>
+                        <li>✅ Stay updated on new XSS techniques</li>
+                        <li>✅ Conduct security training</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-block" style="margin-top: 1rem;">
+// Sample XSS test payloads
+const xssPayloads = [
+  '&lt;script&gt;alert(1)&lt;/script&gt;',
+  '&lt;img src=x onerror=alert(1)&gt;',
+  '&lt;svg onload=alert(1)&gt;',
+  'javascript:alert(1)',
+  'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==',
+  '&lt;div onclick="alert(1)"&gt;click&lt;/div&gt;',
+  '&lt;iframe src="javascript:alert(1)"&gt;',
+  '&lt;input onfocus=alert(1) autofocus&gt;',
+  '&lt;body onload=alert(1)&gt;',
+  '&lt;video&gt;&lt;source onerror="alert(1)"&gt;'
+];
+            </div>
+        </div>
+        
+          <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Simple tab switching
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle tab clicks
+            document.querySelector('.tab-container').addEventListener('click', function(e) {
+                const tab = e.target.closest('.tab');
+                if (!tab || !tab.dataset.tab) return;
+                
+                // Get the tab ID
+                const tabId = tab.dataset.tab;
+                
+                // Remove active class from all tabs
+                const tabs = this.querySelectorAll('.tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                
+                // Remove active class from all contents
+                const contents = this.querySelectorAll('.tab-content');
+                contents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const content = document.getElementById(tabId);
+                if (content) {
+                    content.classList.add('active');
+                }
+            });
+            
+            // Educational console message
+            console.log('XSS Prevention Guide - Key Takeaways:');
+            console.log('');
+            console.log('1. Always validate and sanitize user input');
+            console.log('2. Use Content Security Policy (CSP) headers');
+            console.log('3. Leverage modern framework protections');
+            console.log('4. Regularly test for vulnerabilities');
+            console.log('5. Stay updated on security best practices');
+        });
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding CSRF Attacks - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #4a6491;
+        }
+        
+        .demo-area {
+            grid-column: span 2;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-area {
+                grid-column: span 1;
+            }
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        .form-section.legitimate {
+            border-top: 4px solid #28a745;
+        }
+        
+        .form-section.malicious {
+            border-top: 4px solid #dc3545;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background: #4a6491;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        button:hover {
+            background: #3a5379;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .prevention-list {
+            background: #e8f5e9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+        }
+        
+        .prevention-list h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .simulate-button {
+            background: #dc3545;
+            margin-top: 1rem;
+        }
+        
+        .simulate-button:hover {
+            background: #c82333;
+        }
+        
+        .status-message {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .attack-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 150px;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-step:not(:last-child)::after {
+                content: "↓";
+                right: 50%;
+                top: auto;
+                bottom: -25px;
+                transform: translateX(50%);
+            }
+            
+            .attack-flow {
+                flex-direction: column;
+            }
+            
+            .flow-step {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Understanding CSRF Attacks</h1>
+            <p class="subtitle">Cross-Site Request Forgery: How it works and how to prevent it</p>
+        </header>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">What is CSRF?</h2>
+                <p>Cross-Site Request Forgery (CSRF) is an attack that forces an end user to execute unwanted actions on a web application in which they're currently authenticated.</p>
+                <p>With a little help of social engineering (such as sending a link via email or chat), an attacker may trick the users of a web application into executing actions of the attacker's choosing.</p>
+                
+                <div class="info">
+                    <strong>Key point:</strong> CSRF attacks target state-changing requests, not theft of data, since the attacker has no way to see the response to the forged request.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Attack Prerequisites</h2>
+                <ul class="step-list">
+                    <li>A relevant action within the application that the attacker can induce</li>
+                    <li>Cookie-based session handling (no other authentication mechanisms)</li>
+                    <li>No unpredictable request parameters required</li>
+                    <li>The user must be authenticated to the vulnerable site</li>
+                </ul>
+                
+                <div class="warning">
+                    <strong>Note:</strong> If the victim has an active session with the vulnerable site, the attacker's request will be executed with the victim's privileges.
+                </div>
+            </div>
+            
+            <div class="card demo-area">
+                <h2 class="card-title">CSRF Attack Demonstration</h2>
+                <p>Below we simulate a banking application and a malicious site. The legitimate bank transfer form is on the left, while the malicious auto-submitting form is on the right.</p>
+                
+                <div class="attack-flow">
+                    <div class="flow-step">
+                        <strong>Step 1</strong>
+                        <p>User logs into bank.com</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 2</strong>
+                        <p>User visits attacker.com</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 3</strong>
+                        <p>Malicious form auto-submits</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 4</strong>
+                        <p>Bank processes attacker's request</p>
+                    </div>
+                </div>
+                
+                <div class="form-container">
+                    <!-- Legitimate Bank Form -->
+                    <div class="form-section legitimate">
+                        <h3>Legitimate Bank Transfer Form (bank.com)</h3>
+                        <p>This is what a real transfer form on bank.com might look like:</p>
+                        
+                        <div class="code-block">
+// Legitimate form on bank.com<br>
+&lt;form method="POST" action="/transfer"&gt;<br>
+&nbsp;&nbsp;Send amount: &lt;input name="amount" /&gt;<br>
+&nbsp;&nbsp;To user: &lt;input name="to" /&gt;<br>
+&nbsp;&nbsp;&lt;input type="submit" value="Send" /&gt;<br>
+&lt;/form&gt;
+                        </div>
+                        
+                        <div id="legitimate-form">
+                            <label for="amount">Amount to Transfer:</label>
+                            <input type="number" id="amount" placeholder="Enter amount" value="100">
+                            
+                            <label for="to">Recipient Username:</label>
+                            <input type="text" id="to" placeholder="Enter username" value="john_doe">
+                            
+                            <button id="legitimate-submit">Simulate Legitimate Transfer</button>
+                        </div>
+                        
+                        <div id="legitimate-status" class="status-message"></div>
+                    </div>
+                    
+                    <!-- Malicious Attacker Form -->
+                    <div class="form-section malicious">
+                        <h3>Malicious Auto-Submitting Form (attacker.com)</h3>
+                        <p>This form is hidden on attacker.com and auto-submits when the page loads:</p>
+                        
+                        <div class="code-block">
+// Malicious form on attacker.com<br>
+&lt;form method="POST" action="http://bank.com/transfer"&gt;<br>
+&nbsp;&nbsp;&lt;input name="amount" value="1000" /&gt;<br>
+&nbsp;&nbsp;&lt;input name="to" value="attacker" /&gt;<br>
+&lt;/form&gt;<br>
+&lt;script&gt;<br>
+&nbsp;&nbsp;document.forms[0].submit(); // Auto-submit the form<br>
+&lt;/script&gt;
+                        </div>
+                        
+                        <p><strong>This form is invisible to the user!</strong> When a victim visits attacker.com, this form automatically submits a request to bank.com to transfer $1000 to the attacker's account.</p>
+                        
+                        <button id="simulate-attack" class="simulate-button">Simulate CSRF Attack</button>
+                        
+                        <div id="attack-status" class="status-message"></div>
+                    </div>
+                </div>
+                
+                <div class="warning">
+                    <strong>Important:</strong> If the user is logged into bank.com, the browser will automatically include their session cookies with the malicious request, making it appear legitimate to the bank's server.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">How The Attack Works</h2>
+                <ol class="step-list">
+                    <li>The victim logs into their banking website (bank.com) and receives a session cookie</li>
+                    <li>While still logged in, the victim visits a malicious website (attacker.com)</li>
+                    <li>The malicious site contains a hidden form that targets bank.com's transfer endpoint</li>
+                    <li>The form auto-submits via JavaScript when the page loads</li>
+                    <li>The browser sends the victim's session cookie with the malicious request</li>
+                    <li>bank.com processes the request as legitimate because it came with valid session credentials</li>
+                    <li>The attacker receives the funds without the victim's knowledge</li>
+                </ol>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">CSRF Prevention Techniques</h2>
+                <div class="prevention-list">
+                    <h3>Most Effective Defenses:</h3>
+                    <ul class="step-list">
+                        <li><strong>Anti-CSRF Tokens:</strong> Include a unique, unpredictable token with each form that must match on submission</li>
+                        <li><strong>SameSite Cookies:</strong> Use the SameSite attribute to restrict when cookies are sent</li>
+                        <li><strong>Custom Headers:</strong> Require custom headers (like X-Requested-With) that can't be set cross-origin</li>
+                        <li><strong>Double Submit Cookies:</strong> Send token in both cookie and request body/form parameter</li>
+                        <li><strong>User Interaction Required:</strong> Require re-authentication for sensitive actions</li>
+                    </ul>
+                </div>
+                
+                <div class="code-block">
+// Example of CSRF token implementation in a form<br>
+&lt;form method="POST" action="/transfer"&gt;<br>
+&nbsp;&nbsp;&lt;input type="hidden" name="csrf_token" value="a9b8c7d6e5f4g3h2i1j0"&gt;<br>
+&nbsp;&nbsp;Amount: &lt;input name="amount" /&gt;<br>
+&nbsp;&nbsp;To: &lt;input name="to" /&gt;<br>
+&nbsp;&nbsp;&lt;input type="submit" value="Send"&gt;<br>
+&lt;/form&gt;
+                </div>
+            </div>
+        </div>
+        
+               <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // DOM elements
+        const legitimateSubmitBtn = document.getElementById('legitimate-submit');
+        const simulateAttackBtn = document.getElementById('simulate-attack');
+        const legitimateStatus = document.getElementById('legitimate-status');
+        const attackStatus = document.getElementById('attack-status');
+        
+        // Simulate legitimate form submission
+        legitimateSubmitBtn.addEventListener('click', function() {
+            const amount = document.getElementById('amount').value;
+            const to = document.getElementById('to').value;
+            
+            // Clear previous status
+            legitimateStatus.className = 'status-message';
+            
+            if (!amount || !to) {
+                legitimateStatus.textContent = 'Please fill in all fields.';
+                legitimateStatus.classList.add('error');
+                return;
+            }
+            
+            // Simulate API call delay
+            legitimateSubmitBtn.disabled = true;
+            legitimateSubmitBtn.textContent = 'Processing...';
+            
+            setTimeout(() => {
+                legitimateStatus.textContent = `✓ Legitimate transfer of $${amount} to "${to}" processed successfully.`;
+                legitimateStatus.classList.add('success');
+                
+                legitimateSubmitBtn.disabled = false;
+                legitimateSubmitBtn.textContent = 'Simulate Legitimate Transfer';
+            }, 1500);
+        });
+        
+        // Simulate CSRF attack
+        simulateAttackBtn.addEventListener('click', function() {
+            // Clear previous status
+            attackStatus.className = 'status-message';
+            
+            // Show the attack simulation
+            simulateAttackBtn.disabled = true;
+            simulateAttackBtn.textContent = 'Executing Attack...';
+            
+            // Simulate the steps of the attack
+            setTimeout(() => {
+                attackStatus.innerHTML = `
+                    <strong>CSRF Attack Simulation:</strong>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>Victim visits malicious page (attacker.com)</li>
+                        <li>Hidden form auto-submits to bank.com/transfer</li>
+                        <li>Browser sends victim's session cookie automatically</li>
+                        <li>Bank processes: $1000 transferred to "attacker"</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Attack successful!</strong> The victim's credentials were used without their knowledge.</p>
+                `;
+                attackStatus.classList.add('error');
+                
+                simulateAttackBtn.disabled = false;
+                simulateAttackBtn.textContent = 'Simulate CSRF Attack Again';
+            }, 2000);
+        });
+        
+        // Additional educational content
+        console.log(`
+        CSRF Attack - Educational Notes:
+        
+        1. The key vulnerability: browsers automatically include cookies with requests to the domain that set them.
+        2. CSRF attacks don't steal data; they perform actions using the victim's credentials.
+        3. Prevention methods:
+           - Use CSRF tokens (synchronizer token pattern)
+           - Implement SameSite cookie attribute
+           - Use custom request headers
+           - Require re-authentication for sensitive operations
+        
+        This simulation demonstrates why understanding CSRF is crucial for web developers.
+        `);
+    </script>
+    
+    <!-- Prism.js for syntax highlighting (optional) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

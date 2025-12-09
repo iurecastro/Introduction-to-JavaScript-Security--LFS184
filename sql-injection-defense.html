@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Defense Guide - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #4a6491;
+        }
+        
+        .demo-area {
+            grid-column: span 2;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-area {
+                grid-column: span 1;
+            }
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        .form-section.param {
+            border-top: 4px solid #28a745;
+        }
+        
+        .form-section.orm {
+            border-top: 4px solid #17a2b8;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .prevention-list {
+            background: #e8f5e9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+        }
+        
+        .prevention-list h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .simulate-button {
+            background: #dc3545;
+            margin-top: 1rem;
+        }
+        
+        .simulate-button:hover {
+            background: #c82333;
+        }
+        
+        .status-message {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        button {
+            background: #4a6491;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            display: inline-block;
+        }
+        
+        button:hover {
+            background: #3a5379;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding: 1rem 0;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .nav-button {
+            background: #4a6491;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-button:hover {
+            background: #3a5379;
+        }
+        
+        .protection-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .method-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .method-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .method-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+        }
+        
+        .method-title.param { border-bottom-color: #28a745; }
+        .method-title.orm { border-bottom-color: #17a2b8; }
+        .method-title.input { border-bottom-color: #ffc107; }
+        .method-title.least { border-bottom-color: #dc3545; }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: white;
+            border-bottom: 3px solid white;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .framework-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .framework-example {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        @media (max-width: 768px) {
+            .protection-methods {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                width: 100%;
+                text-align: left;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .tab.active {
+                border-bottom: 3px solid white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>                      
+            <h1>SQL Injection Defense Guide</h1>
+            <p class="subtitle">Parameterized queries, ORM protection, and best practices</p>
+            
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">Overview</button>
+                <button class="tab" data-tab="methods">Protection Methods</button>
+                <button class="tab" data-tab="frameworks">Framework Examples</button>
+                <button class="tab" data-tab="tools">Security Tools</button>
+            </div>
+        </header>
+        
+        <div class="tab-content active" id="overview">
+            <div class="card demo-area">
+                <h2 class="card-title">SQL Injection Defense Overview</h2>
+                
+                <div class="warning">
+                    <strong>⚠️ Critical Security Principle:</strong> Never build SQL queries using string concatenation with untrusted input. This is the #1 cause of SQL injection vulnerabilities.
+                </div>
+                
+                <div class="form-container">
+                    <div class="form-section param">
+                        <h3>Unsafe vs Safe Examples</h3>
+                        
+                        <div class="code-block">
+// UNSAFE - String concatenation<br>
+const query = `SELECT * FROM users <br>
+               WHERE username = '${username}'<br>
+               AND password = '${password}'`
+                        </div>
+                        
+                        <div class="danger">
+                            <strong>Vulnerable to:</strong><br>
+                            username: <code>' OR '1'='1</code><br>
+                            Result: <code>WHERE username = '' OR '1'='1'</code>
+                        </div>
+                        
+                        <div class="code-block">
+// SAFE - Parameterized query<br>
+const query = 'SELECT * FROM users WHERE username = ? AND password = ?'<br>
+const results = db.all(query, [username, password])
+                        </div>
+                        
+                        <div class="success">
+                            <strong>Protected:</strong> Database driver properly escapes special characters
+                        </div>
+                    </div>
+                    
+                    <div class="form-section orm">
+                        <h3>ORM Protection</h3>
+                        <p>Object-Relational Mapping libraries automatically handle parameterization:</p>
+                        
+                        <div class="code-block">
+// Using Sequelize ORM<br>
+const users = await User.findAll({<br>
+  where: {<br>
+    username: username,<br>
+    password: password // Never store plain passwords!<br>
+  }<br>
+})
+                        </div>
+                        
+                        <div class="code-block">
+// Using TypeORM<br>
+const user = await userRepository.findOne({<br>
+  where: { username: username }<br>
+})
+                        </div>
+                        
+                        <button id="demo-orm">Show ORM Protection</button>
+                        
+                        <div id="orm-status" class="status-message"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="methods">
+            <div class="card demo-area">
+                <h2 class="card-title">SQL Injection Protection Methods</h2>
+                
+                <div class="protection-methods">
+                    <div class="method-card">
+                        <h3 class="method-title param">1. Parameterized Queries</h3>
+                        <p>The most effective defense. Parameters are passed separately from the query string.</p>
+                        
+                        <div class="code-block">const query = 'SELECT * FROM users WHERE id = ?'
+const results = db.all(query, [userId])</div>
+                        
+                        <div class="success">
+                            <strong>Database drivers:</strong> MySQL (?), PostgreSQL ($1, $2), SQLite (? or :name)
+                        </div>
+                    </div>
+                    
+                    <div class="method-card">
+                        <h3 class="method-title input">2. Input Validation</h3>
+                        <p>Validate and sanitize all user input before database operations.</p>
+                        
+                        <div class="code-block">function isValidUsername(username) {
+  // Allow only alphanumeric and underscore
+  return /^[a-zA-Z0-9_]{3,20}$/.test(username);
+}
+
+// Use middleware
+app.post('/login', validateLogin, (req, res) => {
+  // Safe to process
+});</div>
+                        
+                        <div class="warning">
+                            <strong>Note:</strong> Validation is important but not sufficient alone. Always use parameterized queries.
+                        </div>
+                    </div>
+                    
+                    <div class="method-card">
+                        <h3 class="method-title least">3. Least Privilege</h3>
+                        <p>Database accounts should have only necessary permissions.</p>
+                        
+                        <table class="comparison-table">
+                            <tr>
+                                <th>Application</th>
+                                <th>Permissions</th>
+                            </tr>
+                            <tr>
+                                <td>Web App</td>
+                                <td>SELECT, INSERT, UPDATE on specific tables</td>
+                            </tr>
+                            <tr>
+                                <td>Admin Panel</td>
+                                <td>DELETE only if absolutely required</td>
+                            </tr>
+                            <tr>
+                                <td>Reports</td>
+                                <td>SELECT only, no modifications</td>
+                            </tr>
+                        </table>
+                        
+                        <div class="danger">
+                            <strong>Never use:</strong> Database administrator accounts for web applications!
+                        </div>
+                    </div>
+                    
+                    <div class="method-card">
+                        <h3 class="method-title orm">4. Use ORM Libraries</h3>
+                        <p>Modern ORMs provide built-in SQL injection protection.</p>
+                        
+                        <div class="code-block">// Sequelize, TypeORM, Prisma, etc.
+// All handle parameterization automatically
+
+// Example: Prisma
+const user = await prisma.user.findUnique({
+  where: { email: email }
+})</div>
+                        
+                        <div class="info">
+                            <strong>Benefits:</strong> Type safety, migration tools, and automatic protection
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="success">
+                    <h3>✅ Best Practices Checklist</h3>
+                    <ul class="step-list">
+                        <li>Always use parameterized queries/prepared statements</li>
+                        <li>Validate and sanitize all user input</li>
+                        <li>Use stored procedures with parameters when appropriate</li>
+                        <li>Implement proper error handling (don't expose SQL errors to users)</li>
+                        <li>Use database connection pooling with limited privileges</li>
+                        <li>Regularly update database drivers and libraries</li>
+                        <li>Implement Web Application Firewall (WAF) rules for SQL injection</li>
+                        <li>Conduct regular security audits and penetration testing</li>
+                        <li>Use ORM libraries with built-in protection</li>
+                        <li>Educate developers about SQL injection risks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="frameworks">
+            <div class="card demo-area">
+                <h2 class="card-title">Framework-Specific Examples</h2>
+                
+                <div class="framework-examples">
+                    <div class="framework-example">
+                        <h3>Express.js with MySQL</h3>
+                        
+                        <div class="code-block">const mysql = require('mysql2/promise');
+
+// Create connection pool
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'app_user', // Limited privileges
+  password: 'secure_password',
+  database: 'app_db',
+  connectionLimit: 10
+});
+
+// Safe parameterized query
+app.get('/user/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM users WHERE id = ?',
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (error) {
+    // Log error but don't expose details
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});</div>
+                    </div>
+                    
+                    <div class="framework-example">
+                        <h3>Express.js with PostgreSQL</h3>
+                        
+                        <div class="code-block">const { Pool } = require('pg');
+
+const pool = new Pool({
+  user: 'app_user',
+  host: 'localhost',
+  database: 'app_db',
+  password: 'secure_password',
+  port: 5432,
+});
+
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  try {
+    // Safe parameterized query
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
+      [username]
+    );
+    
+    if (result.rows.length === 0) {
+      res.status(401).json({ error: 'Invalid' });
+      return;
+    }
+    
+    // Compare hashed password
+    const user = result.rows[0];
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    
+    if (isValid) {
+      // Create JWT/session
+      res.json({ message: 'Login successful' });
+    } else {
+      res.status(401).json({ error: 'Invalid' });
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});</div>
+                    </div>
+                </div>
+                
+                <div class="info">
+                    <h3>Key Framework Features</h3>
+                    <ul class="step-list">
+                        <li><strong>Express.js:</strong> Use <code>express-validator</code> for input validation</li>
+                        <li><strong>NestJS:</strong> Built-in validation with class-validator</li>
+                        <li><strong>Fastify:</strong> Schema-based validation with Ajv</li>
+                        <li><strong>Koa:</strong> Middleware-based validation</li>
+                        <li><strong>All frameworks:</strong> Support parameterized queries with database drivers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="tools">
+            <div class="card demo-area">
+                <h2 class="card-title">Security Tools & Testing</h2>
+                
+                <div class="form-container">
+                    <div class="form-section">
+                        <h3>Security Tools</h3>
+                        
+                        <table class="comparison-table">
+                            <tr>
+                                <th>Tool</th>
+                                <th>Purpose</th>
+                                <th>Installation</th>
+                            </tr>
+                            <tr>
+                                <td><strong>sqlmap</strong></td>
+                                <td>Automated SQL injection detection</td>
+                                <td><code>pip install sqlmap</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>ESLint-plugin-security</strong></td>
+                                <td>Static analysis for JavaScript</td>
+                                <td><code>npm install eslint-plugin-security</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>helmet</strong></td>
+                                <td>Express.js security middleware</td>
+                                <td><code>npm install helmet</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>express-validator</strong></td>
+                                <td>Input validation middleware</td>
+                                <td><code>npm install express-validator</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>OWASP ZAP</strong></td>
+                                <td>Web application security scanner</td>
+                                <td>Download from OWASP</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Testing for SQL Injection</h3>
+                        
+                        <div class="danger">
+                            <strong>Test your applications with these inputs:</strong>
+                        </div>
+                        
+                        <div class="code-block">'  -- Single quote
+"  -- Double quote
+;  -- Semicolon
+--  -- SQL comment
+/* */  -- Multi-line comment
+' OR '1'='1  -- Always true
+' UNION SELECT null --  -- Union attack
+'; DROP TABLE users; --  -- Destructive
+'; WAITFOR DELAY '00:00:05' --  -- Time-based
+' AND 1=CONVERT(int, @@version) --  -- Error-based</div>
+                        
+                        <button id="test-sql">Run Security Test Simulation</button>
+                        
+                        <div id="test-status" class="status-message"></div>
+                    </div>
+                </div>
+                
+                <div class="warning">
+                    <h3>🚨 Common Mistakes to Avoid</h3>
+                    <ul class="step-list">
+                        <li>Building dynamic WHERE clauses with string concatenation</li>
+                        <li>Using <code>eval()</code> or similar functions with SQL strings</li>
+                        <li>Assuming input is safe because it comes from a dropdown or checkbox</li>
+                        <li>Using blacklist approaches instead of parameterization</li>
+                        <li>Forgetting to escape table or column names (use whitelists instead)</li>
+                        <li>Storing passwords in plain text (always hash with bcrypt/argon2)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+  
+        
+                <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // ORM Protection Demo
+        const demoOrmBtn = document.getElementById('demo-orm');
+        const ormStatus = document.getElementById('orm-status');
+        
+        demoOrmBtn?.addEventListener('click', function() {
+            ormStatus.className = 'status-message';
+            demoOrmBtn.disabled = true;
+            demoOrmBtn.textContent = 'Demonstrating...';
+            
+            setTimeout(() => {
+                ormStatus.innerHTML = `
+                    <strong>ORM Protection Demonstration:</strong>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>User submits: <code>admin' OR '1'='1</code></li>
+                        <li>ORM converts to parameterized query</li>
+                        <li>Database receives: <code>SELECT * FROM users WHERE username = 'admin'' OR ''1''=''1'</code></li>
+                        <li>Special characters are properly escaped</li>
+                        <li>Attack fails - no matching user found</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Protection successful!</strong> ORM prevented SQL injection.</p>
+                `;
+                ormStatus.classList.add('success');
+                
+                demoOrmBtn.disabled = false;
+                demoOrmBtn.textContent = 'Show ORM Protection Again';
+            }, 1500);
+        });
+
+        // Security Test Simulation
+        const testSqlBtn = document.getElementById('test-sql');
+        const testStatus = document.getElementById('test-status');
+        
+        testSqlBtn?.addEventListener('click', function() {
+            testStatus.className = 'status-message';
+            testSqlBtn.disabled = true;
+            testSqlBtn.textContent = 'Testing...';
+            
+            setTimeout(() => {
+                testStatus.innerHTML = `
+                    <strong>Security Test Results:</strong>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>Test 1: Single quote (') - <span style="color: #28a745;">✓ Blocked</span></li>
+                        <li>Test 2: SQL comment (--) - <span style="color: #28a745;">✓ Blocked</span></li>
+                        <li>Test 3: Union attack - <span style="color: #28a745;">✓ Blocked</span></li>
+                        <li>Test 4: Always true condition - <span style="color: #28a745;">✓ Blocked</span></li>
+                        <li>Test 5: Destructive command - <span style="color: #28a745;">✓ Blocked</span></li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>All tests passed!</strong> Parameterized queries are working correctly.</p>
+                `;
+                testStatus.classList.add('success');
+                
+                testSqlBtn.disabled = false;
+                testSqlBtn.textContent = 'Run Security Test Again';
+            }, 2000);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('SQL Injection Defense Guide loaded');
+        });
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

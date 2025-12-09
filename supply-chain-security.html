@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain Security - JavaScript Security Suite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            border-color: #5f27cd;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .attack-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 150px;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-step:not(:last-child)::after {
+                content: "↓";
+                right: 50%;
+                top: auto;
+                bottom: -25px;
+                transform: translateX(50%);
+            }
+            
+            .attack-flow {
+                flex-direction: column;
+            }
+            
+            .flow-step {
+                width: 100%;
+            }
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #5f27cd;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .chapter-overview {
+            background: linear-gradient(135deg, #6c5ce7 0%, #5f27cd 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+        
+        .chapter-overview h2 {
+            margin-bottom: 1rem;
+            color: white;
+        }
+        
+        .chapter-overview ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+        
+        .chapter-overview li {
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        
+        .chapter-overview li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin: 3rem 0;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .nav-button {
+            background: #4a6491;
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-button:hover {
+            background: #3a5379;
+        }
+        
+        .nav-button.next {
+            background: #5f27cd;
+        }
+        
+        .nav-button.next:hover {
+            background: #4a1da6;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #5f27cd;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>            
+            <h1>Supply Chain Security</h1>
+            <p class="subtitle">The Hidden Risks in Your Dependencies and How to Mitigate Them</p>
+        </header>
+        
+          
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">100+</div>
+                <div class="stat-label">New supply chain attacks per week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">75%</div>
+                <div class="stat-label">Modern apps consist of dependencies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">$1.7M</div>
+                <div class="stat-label">Average cost of supply chain attack</div>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">The Hidden Risks in Your Dependencies</h2>
+                <p>Modern web applications are built on a foundation of open source packages. While this accelerates development and promotes code reuse, it also creates security risks.</p>
+                
+                <p>Attackers are increasingly targeting open source dependencies, seeking to add malicious code to these libraries, instead of directly attacking applications. If they can compromise a dependency that is used in many different applications, then one successful attack yields much more reward for the attacker.</p>
+                
+                <div class="warning">
+                    <strong>⚠️ Critical Risk:</strong> A single compromised dependency can affect thousands of applications simultaneously, making supply chain attacks highly attractive to attackers.
+                </div>
+                
+                <h3>What Attackers Can Do:</h3>
+                <ul class="step-list">
+                    <li><strong>Exfiltrate data</strong> from production applications</li>
+                    <li><strong>Steal environment variables and secrets</strong></li>
+                    <li><strong>Inject cryptocurrency miners</strong> into servers</li>
+                    <li><strong>Execute ransomware attacks</strong></li>
+                    <li><strong>Install backdoors</strong> into applications</li>
+                    <li><strong>Deploy malware</strong> on developers' machines</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Attack Vectors Overview</h2>
+                
+                <h3>Supply Chain Attack Vectors:</h3>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Attack Type</th>
+                            <th>Description</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Typosquatting</strong></td>
+                            <td>Registering package names similar to popular ones (e.g., loadash vs lodash)</td>
+                            <td><span style="color: #dc3545;">High</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dependency Confusion</strong></td>
+                            <td>Exploiting public/private registry resolution differences</td>
+                            <td><span style="color: #dc3545;">High</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Account Compromise</strong></td>
+                            <td>Gaining access to maintainer accounts via phishing or stolen credentials</td>
+                            <td><span style="color: #ffc107;">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maintainer Burnout</strong></td>
+                            <td>Targeting overburdened maintainers who accept malicious contributions</td>
+                            <td><span style="color: #28a745;">Low-Medium</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="info">
+                    <strong>📊 Real-world Data:</strong> Package registries face ~100 new supply chain attacks weekly across npm, PyPI, and Maven ecosystems.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Defense Strategies</h2>
+                
+                <h3>1. Use Lockfiles and Precise Versions</h3>
+                <p>Lockfiles ensure all environments use exactly the same package versions and cryptographic hashes:</p>
+                
+                <div class="code-block">
+{
+  "dependencies": {
+    "express": {
+      "version": "4.18.2",
+      "resolved": "https://registry.npmjs.org/express/-/express-4.18.2.tgz",
+      "integrity": "sha512-9/2P0q4BhrkIqEaxBziKspnHvy5V2vUjMRHX0yaxnJxH9K6PwWkgo+0JTQ==",
+      "dependencies": {
+        "accepts": "1.3.8",
+        "array-flatten": "1.1.1"
+      }
+    }
+  }
+}
+                </div>
+                
+                <h3>2. Minimize Dependencies</h3>
+                <p>Reduce attack surface by minimizing direct and transitive dependencies:</p>
+                <ul class="step-list">
+                    <li>Use tools like <code>depcheck</code> to find unused dependencies</li>
+                    <li>Consider <code>socket-optimize</code> for transitive dependency reduction</li>
+                    <li>Prefer actively maintained packages with good security track records</li>
+                </ul>
+                
+                <h3>3. Use Scanning and Monitoring Tools</h3>
+                <ul class="step-list">
+                    <li><strong>npm audit</strong>: Basic vulnerability scanning (limited to CVEs)</li>
+                    <li><strong>Socket/Snyk</strong>: Advanced real-time scanning with behavioral analysis</li>
+                    <li>CI integration for automated security checks</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Real-World Attack Flow</h2>
+                
+                <div class="attack-flow">
+                    <div class="flow-step">
+                        <strong>Step 1</strong>
+                        <p>Attacker creates malicious package</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 2</strong>
+                        <p>Package published to public registry</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 3</strong>
+                        <p>Developer installs malicious package</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 4</strong>
+                        <p>Malicious code executes in CI/CD or production</p>
+                    </div>
+                </div>
+                
+                <div class="danger">
+                    <strong>💥 Critical Impact:</strong> The 2021 SolarWinds attack affected 18,000 organizations by compromising a legitimate software update. This demonstrates the massive scale potential of supply chain attacks.
+                </div>
+                
+                <h3>Prevention Checklist:</h3>
+                <ul class="step-list">
+                    <li>✅ Always commit lockfiles to version control</li>
+                    <li>✅ Use dependency scanning in CI/CD pipelines</li>
+                    <li>✅ Implement automated security updates</li>
+                    <li>✅ Monitor for suspicious package behavior</li>
+                    <li>✅ Educate team about supply chain risks</li>
+                </ul>
+            </div>
+        </div>
+      
+                <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script>
+        // Add interactive functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Highlight code blocks
+            Prism.highlightAll();
+            
+            // Add click handlers for table rows
+            document.querySelectorAll('.comparison-table tr').forEach(row => {
+                row.addEventListener('click', function() {
+                    this.style.backgroundColor = '#f8f9fa';
+                    setTimeout(() => {
+                        this.style.backgroundColor = '';
+                    }, 300);
+                });
+            });
+            
+            // Console log educational message
+            console.log(`
+            Supply Chain Security - Key Takeaways:
+            
+            1. Modern apps are 75% dependencies on average
+            2. Supply chain attacks target dependencies, not applications
+            3. Key attack vectors: Typosquatting, Dependency Confusion
+            4. Defense: Lockfiles, dependency minimization, scanning tools
+            
+            Always verify dependencies before installation!
+            `);
+        });
+    </script>
+</body>
+</html>

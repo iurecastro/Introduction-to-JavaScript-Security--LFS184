@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Security Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            color: #4a6491;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+              display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+                margin-bottom: 1.5rem;
+                flex-direction: column;
+        }
+        
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            background: #4a6491;
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: bold;
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .category-card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .category-title {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid;
+            font-size: 1.5rem;
+        }
+        
+        .category-title.csrf { border-bottom-color: #4a6491; }
+        .category-title.xss { border-bottom-color: #ff6b6b; }
+        .category-title.auth { border-bottom-color: #4ecdc4; }
+        .category-title.layout { border-bottom-color: #feca57; }
+        .category-title.sop { border-bottom-color: #5f27cd; }
+        .category-title.server { border-bottom-color: #ff9f43; }
+        .category-title.other { border-bottom-color: #6c5ce7; }
+        /* ADICIONAR: Nova cor para Supply Chain Security */
+        .category-title.supply { border-bottom-color: #00d2d3; }
+        
+        .project-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .project-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            border-left: 4px solid #4a6491;
+        }
+        
+        .project-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .project-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .project-card p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .status-complete { background: #d4edda; color: #155724; }
+        .status-new { background: #cce5ff; color: #004085; }
+        .status-updated { background: #fff3cd; color: #856404; }
+        
+        .features {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+        
+        .features h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .features ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .features li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .features li:before {
+            content: "✓";
+            color: #4a6491;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4a6491;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .category-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        
+        .new-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff6b6b;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+
+            <div class="logo">
+                    <div class="logo-img">JS</div>
+                    <div>
+                        <h1>JavaScript Security Reference</h1>
+                        <p class="subtitle">Educational resources for modern web application security</p>
+                    </div>
+             </div>
+           
+            
+        </header>
+        
+        <div class="categories">
+            <!-- CSRF Section - MANTIDO -->
+            <div class="category-card">
+                <h2 class="category-title csrf">CSRF Security</h2>
+                <p class="category-description">Comprehensive resources on Cross-Site Request Forgery attacks and protection techniques. Learn how attackers forge requests and how to prevent them.</p>
+                
+                <div class="project-list">
+                    <a href="csrf-demo.html" class="project-card">
+                        <h3>CSRF Attack Demo</h3>
+                        <p>Interactive demonstration of CSRF attacks with real examples and attack flow visualization</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="csrf-protection.html" class="project-card">
+                        <h3>CSRF Protection Guide</h3>
+                        <p>4 protection methods with implementation examples: SameSite, tokens, Referer checks</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- XSS Section - MANTIDO -->
+            <div class="category-card">
+                <h2 class="category-title xss">XSS Security</h2>
+                <p class="category-description">Complete coverage of Cross-Site Scripting vulnerabilities, attack types, and prevention techniques for modern web applications.</p>
+                
+                <div class="project-list">
+                    <a href="cross-site-scripting-XSS-javascript-security.html" class="project-card">
+                        <h3>XSS Comprehensive Guide</h3>
+                        <p>Complete XSS introduction with real-world examples and attack breakdowns</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="XSS-attack-types.html" class="project-card">
+                        <h3>XSS Attack Types</h3>
+                        <p>Reflected, Stored, and DOM-based XSS explained with vulnerable code examples</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="XSS-Prevention-Tools.html" class="project-card">
+                        <h3>XSS Prevention & Tools</h3>
+                        <p>Output encoding, CSP, framework protections, and security tools guide</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="XSS-defense-best-practices.html" class="project-card">
+                        <h3>XSS Defense Best Practices</h3>
+                        <p>Trusted Types, CSP nonces, modern techniques, and complete security headers</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Same-Origin Policy Section - MANTIDO -->
+            <div class="category-card">
+                <h2 class="category-title sop">The Same-Origin Policy</h2>
+                <p class="category-description">Complete guide to web security boundaries, cross-origin interactions, and safe mechanisms for cross-origin communication. Covers origins, isolation, limitations, and automatic exceptions.</p>
+                
+                <div class="project-list">
+                    <a href="Same-Origin-Policy-SOP.html" class="project-card">
+                        <h3>Same-Origin Policy Complete Guide</h3>
+                        <p>Understanding origins, security boundaries, allowed vs restricted cross-origin interactions</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="cross-origin-mechanisms.html" class="project-card">
+                        <h3>Cross-Origin Communication Mechanisms</h3>
+                        <p>postMessage API, CORS implementation, automatic exceptions and security risks</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Authentication & Session Security - MANTIDO -->
+            <div class="category-card">
+                <h2 class="category-title auth">Authentication & Session Security</h2>
+                <p class="category-description">Complete guide to secure authentication, session management, cookies, JWT, and protection against session hijacking attacks.</p>
+                
+                <div class="project-list">
+                    <a href="Cookies-Sessions-Security.html" class="project-card">
+                        <h3>Cookies & Sessions Security</h3>
+                        <p>Complete guide to secure session management, cookie security properties, and implementation</p>
+                                    <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="session-hijacking-attacks.html" class="project-card">
+                        <h3>Session Hijacking Attacks</h3>
+                        <p>Understanding and preventing session theft, network attacks, XSS-based theft</p>
+                  <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="JWT-security.html" class="project-card">
+                        <h3>JWT Security Guide</h3>
+                        <p>JSON Web Tokens: Stateless authentication security, refresh tokens, attack prevention</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Server-Side Security Section - MANTIDO -->
+            <div class="category-card">
+         
+                <h2 class="category-title server">Server-Side Security</h2>
+                <p class="category-description">Complete guide to server-side injection vulnerabilities, command injection, SQL injection, and defense techniques for backend security.</p>
+                
+                <div class="project-list">
+                    <a href="server-side-injection.html" class="project-card">
+                        <h3>Server-Side Code Injection</h3>
+                        <p>Command injection, SQL injection, and full system access vulnerabilities with real examples</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="sql-injection-defense.html" class="project-card">
+                        <h3>SQL Injection Defense Guide</h3>
+                        <p>Parameterized queries, ORM protection, input validation, and security best practices</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Other Server Risks Section - MANTIDO -->
+            <div class="category-card">
+                                <h2 class="category-title other">Other Server Risks</h2>
+                <p class="category-description">Complete guide to Server-Side Request Forgery (SSRF), Regular Expression Denial of Service (ReDoS), and other internal server threats. Learn about cloud metadata attacks, catastrophic backtracking, and defense strategies.</p>
+                
+                <div class="project-list">
+                    <a href="other-server-risks.html" class="project-card">
+                        <h3>Other Server Risks Overview</h3>
+                        <p>Complete chapter introduction: SSRF and ReDoS vulnerabilities with comparative analysis</p>
+                                 <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="server-side-request-forgery-SSRF.html" class="project-card">
+                        <h3>Server-Side Request Forgery (SSRF)</h3>
+                        <p>Internal network attacks, cloud metadata vulnerabilities, and prevention techniques</p>
+                                 <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/#appendix-about-regular-expression-backtracking" target="_blank" class="project-card">
+                        <h3>Regular Expression Denial of Service (ReDoS)</h3>
+                        <p>Catastrophic backtracking, Cloudflare outage case study, and safe regex patterns</p>
+                                    <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- NOVA SEÇÃO: Supply Chain Security -->
+            <div class="category-card">
+                
+                <h2 class="category-title supply">Supply Chain Security</h2>
+                <p class="category-description">Complete guide to dependency security, supply chain attacks, and defense strategies. Learn about typosquatting, dependency confusion, maintainer compromise, and how to protect your applications.</p>
+                
+                <div class="project-list">
+                    <a href="supply-chain-security.html" class="project-card">
+                        <h3>Supply Chain Security Overview</h3>
+                        <p>Complete introduction: Attack vectors, real-world cases, and defense strategies</p>
+                                    <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="supply-chain-attack-vectors.html" class="project-card">
+                        <h3>Supply Chain Attack Vectors</h3>
+                        <p>Typosquatting, dependency confusion, account compromise, and maintainer burnout</p>
+                                  <span class="status-badge status-complete">Complete</span>
+                    </a>
+                    
+                    <a href="supply-chain-defense-strategies.html" class="project-card">
+                        <h3>Supply Chain Defense Strategies</h3>
+                        <p>Lockfiles, dependency minimization, scanning tools, and automation techniques</p>
+                                  <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Tools & Configuration - MANTIDO 
+            <div class="category-card">
+                <h2 class="category-title layout">Tools & Configuration</h2>
+                <p class="category-description">Layout system, configuration guides, and development tools for consistent design and security implementation.</p>
+                
+                <div class="project-list">
+                    <a href="layout-config.html" class="project-card">
+                        <h3>Layout Configuration</h3>
+                        <p>Complete layout system documentation, styles, and implementation guide</p>
+                        <span class="status-badge status-complete">Complete</span>
+                    </a>
+                </div>
+            </div>
+
+            -->
+        </div>
+        
+        <div class="features">
+            <h3>🎓 Educational Features:</h3>
+            <ul>
+                <li>Interactive demonstrations with live code examples</li>
+                <li>Real-world attack scenarios and case studies</li>
+                <li>Production-ready implementation examples in Express.js</li>
+                <li>Modern framework protections (React, Vue, Angular, Svelte)</li>
+                <li>Content Security Policy (CSP) implementation guide</li>
+                <li>Trusted Types API and modern browser security features</li>
+                <li>Complete session management and authentication security</li>
+                <li>JWT authentication with refresh token rotation</li>
+                <li>Session hijacking prevention and mitigation techniques</li>
+                <li><strong>Same-Origin Policy deep dive</strong> with origins, isolation, and boundaries</li>
+                <li><strong>Cross-origin communication mechanisms</strong>: postMessage API and CORS</li>
+                <li><strong>Automatic exceptions</strong> and their security implications</li>
+                <li><strong>Server-side injection vulnerabilities</strong>: Command and SQL injection</li>
+                <li><strong>Parameterized query defense</strong>: Complete SQL injection prevention</li>
+                <li><strong>Server-Side Request Forgery (SSRF)</strong>: Cloud metadata attacks and internal network access</li>
+                <li><strong>Regular Expression Denial of Service (ReDoS)</strong>: Catastrophic backtracking and performance attacks</li>
+                <li><strong>Cloud-specific vulnerabilities</strong>: Metadata service protection and isolation strategies</li>
+                <!-- ADICIONAR: Novos recursos de Supply Chain Security -->
+                <li><strong>Supply Chain Security</strong>: Dependency attacks, typosquatting, and defense strategies</li>
+                <li><strong>Software Bill of Materials (SBOM)</strong>: Dependency transparency and verification</li>
+                <li><strong>Dependency scanning tools</strong>: Socket, Snyk, Dependabot integration</li>
+                <li><strong>Lockfile security</strong>: Preventing dependency confusion and version drift</li>
+                <li><strong>Maintainer security</strong>: Preventing account compromise and burnout exploitation</li>
+                <li>Security tools, testing checklists, and audit scripts</li>
+                <li>Mobile-responsive design with consistent layout system</li>
+     
+            </ul>
+        </div>
+        
+        
+          
+        <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Adicionar interação simples para os cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const projectCards = document.querySelectorAll('.project-card');
+            
+            projectCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
+                
+                // Para demonstração: log no console ao clicar
+                card.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (!href.startsWith('http')) {
+                        console.log(`Navegando para: ${href}`);
+                        // Em produção, isso seria um link real
+                    }
+                });
+            });
+            
+            // Log de boas-vindas no console
+            console.log(`
+            ========================================
+            JavaScript Security Suite
+            Linux Foundation - Security Course
+            ========================================
+            🔗 Links funcionais para todas as páginas
+            ========================================
+            `);
+        });
+    </script>
+</body>
+</html>

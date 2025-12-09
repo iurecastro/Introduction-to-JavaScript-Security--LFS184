@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Same-Origin Policy (SOP) - JavaScript Security</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* ===== LAYOUT SYSTEM - CONSISTENT ACROSS ALL PAGES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* ===== HEADER STYLES ===== */
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* ===== CARD SYSTEM ===== */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .card-title.intro { border-bottom-color: #ff6b6b; }
+        .card-title.components { border-bottom-color: #4ecdc4; }
+        .card-title.isolation { border-bottom-color: #45b7d1; }
+        .card-title.policy { border-bottom-color: #96ceb4; }
+        .card-title.relaxing { border-bottom-color: #ff9ff3; }
+        .card-title.exceptions { border-bottom-color: #feca57; }
+        .card-title.cors { border-bottom-color: #5f27cd; }
+        
+        /* ===== CODE BLOCKS ===== */
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        /* ===== MESSAGE BOXES ===== */
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        /* ===== TABLES ===== */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* ===== LISTS ===== */
+        .step-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* ===== DEMO AREAS ===== */
+        .demo-area {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* ===== TABS SYSTEM ===== */
+        .tab-container {
+            margin: 1.5rem 0;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #4a6491;
+            border-bottom: 3px solid #4a6491;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* ===== PRACTICE CARDS ===== */
+        .practice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .practice-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .practice-card h4 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        /* ===== SPECIFIC COMPONENTS ===== */
+        .url-visualization {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            border-left: 4px solid #4a6491;
+        }
+        
+        .url-part {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .interaction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .interaction-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 2px solid;
+            text-align: center;
+        }
+        
+        .interaction-card.allowed {
+            border-color: #d4edda;
+            background: #d4edda20;
+        }
+        
+        .interaction-card.denied {
+            border-color: #f8d7da;
+            background: #f8d7da20;
+        }
+        
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>            
+            <h1>Same-Origin Policy (SOP)</h1>
+            <p class="subtitle">Understanding Web Security Boundaries and Cross-Origin Interactions</p>
+        </header>
+        
+        <!-- Introduction -->
+        <div class="card">
+            <h2 class="card-title intro">Chapter Overview</h2>
+            <p>The Same-Origin Policy (SOP) is the core security model governing how web pages from different origins interact. This chapter covers what defines an origin, why isolation is important, and what types of cross-origin interactions are allowed or restricted.</p>
+            
+            <div class="info">
+                <strong>🎯 Learning Objectives:</strong>
+                <ul class="step-list">
+                    <li>Understand what constitutes an "origin"</li>
+                    <li>Learn why browser isolation between sites matters</li>
+                    <li>Identify allowed vs. restricted cross-origin interactions</li>
+                    <li>Explore mechanisms to safely relax SOP restrictions</li>
+                    <li>Recognize built-in exceptions to the policy</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- What is an Origin? -->
+        <div class="card">
+            <h2 class="card-title components">What Is an Origin?</h2>
+            <p>An origin is a foundational concept in web security, defined by three components: <strong>protocol</strong>, <strong>hostname</strong>, and <strong>port</strong>.</p>
+            
+            <div class="url-visualization">
+                <h4>📊 URL Components Breakdown:</h4>
+                <div class="url-part">
+                    <strong>Protocol:</strong> https://
+                    <small>How data is transferred (http:// or https://)</small>
+                </div>
+                <div class="url-part">
+                    <strong>Hostname:</strong> example.com
+                    <small>The domain name identifying the server</small>
+                </div>
+                <div class="url-part">
+                    <strong>Port:</strong> :443
+                    <small>Specific communication channel (default: 80 for HTTP, 443 for HTTPS)</small>
+                </div>
+                <div class="url-part">
+                    <strong>Path:</strong> /path/page.html
+                    <small>NOT part of the origin - only identifies specific resources</small>
+                </div>
+            </div>
+            
+            <h4>Origin Comparison Examples:</h4>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Source URL</th>
+                        <th>Target URL</th>
+                        <th>Same Origin?</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>https://example.com/a/</td>
+                        <td>https://example.com/b/</td>
+                        <td>✅ Yes</td>
+                        <td>Same protocol, hostname, and port</td>
+                    </tr>
+                    <tr>
+                        <td>https://example.com/</td>
+                        <td>http://example.com/</td>
+                        <td>❌ No</td>
+                        <td>Protocol differs (https vs http)</td>
+                    </tr>
+                    <tr>
+                        <td>https://example.com/</td>
+                        <td>https://www.example.com/</td>
+                        <td>❌ No</td>
+                        <td>Hostname differs (example.com vs www.example.com)</td>
+                    </tr>
+                    <tr>
+                        <td>https://example.com/</td>
+                        <td>https://example.com:8080/</td>
+                        <td>❌ No</td>
+                        <td>Port differs (443 vs 8080)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="warning">
+                <strong>⚠️ Important:</strong> Two URLs have the same origin <strong>only if all three components match exactly</strong>. The path (/page.html) is never considered when determining origin.
+            </div>
+        </div>
+        
+        <!-- Isolation Between Origins -->
+        <div class="card">
+            <h2 class="card-title isolation">Why Isolation Between Sites Matters</h2>
+            
+            <div class="interaction-grid">
+                <div class="interaction-card allowed">
+                    <div class="icon">🔗</div>
+                    <h4>Links</h4>
+                    <p><strong>✅ ALLOWED</strong></p>
+                    <p>Origin A can link to Origin B. This is fundamental to how the web works.</p>
+                </div>
+                
+                <div class="interaction-card allowed">
+                    <div class="icon">📦</div>
+                    <h4>Embedding</h4>
+                    <p><strong>✅ ALLOWED</strong></p>
+                    <p>Origins can embed other origins using iframes. However, JavaScript access to embedded content is restricted.</p>
+                </div>
+                
+                <div class="interaction-card allowed">
+                    <div class="icon">📝</div>
+                    <h4>Form Submissions</h4>
+                    <p><strong>✅ ALLOWED</strong></p>
+                    <p>Historical exception enabling cross-origin form submissions.</p>
+                </div>
+                
+                <div class="interaction-card allowed">
+                    <div class="icon">🖼️</div>
+                    <h4>Resource Loading</h4>
+                    <p><strong>✅ ALLOWED</strong></p>
+                    <p>Images, stylesheets, and scripts can be loaded from different origins.</p>
+                </div>
+                
+                <div class="interaction-card denied">
+                    <div class="icon">👁️</div>
+                    <h4>Data Reading</h4>
+                    <p><strong>❌ DENIED</strong></p>
+                    <p>JavaScript cannot read data from different origins unless explicitly permitted (e.g., via CORS).</p>
+                </div>
+                
+                <div class="interaction-card denied">
+                    <div class="icon">✏️</div>
+                    <h4>Content Modification</h4>
+                    <p><strong>❌ DENIED</strong></p>
+                    <p>One origin cannot modify content from another origin, even in embedded iframes.</p>
+                </div>
+            </div>
+            
+            <div class="danger">
+                <strong>🔥 Security Risks of Allowed Interactions:</strong>
+                <ul class="step-list">
+                    <li><strong>Embedded Content:</strong> Could be used for clickjacking attacks</li>
+                    <li><strong>Form Submissions:</strong> Enable Cross-Site Request Forgery (CSRF) attacks</li>
+                    <li><strong>Resource Loading:</strong> May leak information via cookies</li>
+                </ul>
+            </div>
+            
+            <div class="info">
+                <strong>💡 The Balance:</strong> SOP must balance security with functionality. Complete isolation would break the web, while no isolation would make it unsafe. SOP defines the boundary between "okay" and "not okay" interactions.
+            </div>
+        </div>
+        
+        <!-- Practical Examples -->
+        <div class="demo-area">
+            <h3>🔍 Practical SOP Examples</h3>
+            
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="embedding">Embedding Content</button>
+                    <button class="tab" data-tab="data-access">Data Access</button>
+                    <button class="tab" data-tab="modification">Content Modification</button>
+                </div>
+                
+                <div id="embedding" class="tab-content active">
+                    <h4>✅ Allowed: Embedding Cross-Origin Content</h4>
+                    <div class="code-block">
+// You can embed content from other origins
+&lt;!-- This works --&gt;
+&lt;iframe src="https://youtube.com/embed/video123"&gt;&lt;/iframe&gt;
+
+&lt;!-- This also works --&gt;
+&lt;img src="https://other-site.com/image.jpg"&gt;
+
+// However, you CANNOT access the iframe's content:
+const iframe = document.querySelector('iframe');
+iframe.contentDocument; // ❌ Returns null for cross-origin iframes
+iframe.contentWindow.document; // ❌ Access denied
+                    </div>
+                </div>
+                
+                <div id="data-access" class="tab-content">
+                    <h4>❌ Denied: Reading Cross-Origin Data</h4>
+                    <div class="code-block">
+// This fetch will succeed (request is sent)
+fetch('https://api.bank.com/user-data', {
+  method: 'GET',
+  credentials: 'include' // Sends cookies
+})
+.then(response => {
+  // But reading the response fails without CORS
+  return response.json(); // ❌ Throws error if no CORS headers
+})
+.catch(error => {
+  console.error('CORS error:', error);
+  // Error: Failed to fetch (cross-origin request blocked)
+});
+
+// Similarly for images:
+const img = new Image();
+img.src = 'https://other-site.com/secret-image.jpg';
+img.onload = () => {
+  // Cannot read pixel data from cross-origin images
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  ctx.getImageData(0, 0, 1, 1); // ❌ Tainted canvas error
+};
+                    </div>
+                </div>
+                
+                <div id="modification" class="tab-content">
+                    <h4>❌ Denied: Modifying Cross-Origin Content</h4>
+                    <div class="code-block">
+// Even if you successfully embed content, you cannot modify it
+const iframe = document.createElement('iframe');
+iframe.src = 'https://other-site.com';
+document.body.appendChild(iframe);
+
+// All these attempts will fail:
+iframe.contentDocument.body.innerHTML = 'Hacked!'; // ❌
+iframe.contentDocument.body.style.backgroundColor = 'red'; // ❌
+iframe.contentWindow.document.title = 'Modified'; // ❌
+
+// Error: "Blocked a frame with origin "https://your-site.com" 
+// from accessing a cross-origin frame."
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Relaxing the Same-Origin Policy -->
+        <div class="card">
+            <h2 class="card-title relaxing">Relaxing the Same-Origin Policy</h2>
+            <p>There are legitimate cases where cross-origin interaction is needed. Here are safe ways to enable it:</p>
+            
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="postmessage">postMessage API</button>
+                    <button class="tab" data-tab="cors">CORS</button>
+                    <button class="tab" data-tab="document-domain">document.domain (Legacy)</button>
+                </div>
+                
+                <div id="postmessage" class="tab-content active">
+                    <h4>Secure Cross-Origin Communication: postMessage API</h4>
+                    <div class="code-block">
+// Origin A (parent window) sending message to Origin B (iframe)
+const iframe = document.querySelector('iframe');
+iframe.contentWindow.postMessage(
+  { type: 'userData', data: userInfo },
+  'https://trusted-site.com' // Target origin
+);
+
+// Origin B (iframe) receiving messages
+window.addEventListener('message', (event) => {
+  // ✅ ALWAYS verify sender origin
+  if (event.origin !== 'https://parent-site.com') {
+    console.warn('Ignoring message from untrusted origin:', event.origin);
+    return;
+  }
+  
+  // Handle the message
+  if (event.data.type === 'userData') {
+    displayUserInfo(event.data.data);
+  }
+});
+
+// Origin B can also send messages back
+window.parent.postMessage(
+  { type: 'response', data: processedData },
+  'https://parent-site.com'
+);
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Security Warning:</strong>
+                        <ul class="step-list">
+                            <li>Always validate <code>event.origin</code> before processing messages</li>
+                            <li>Always specify the target origin in <code>postMessage()</code></li>
+                            <li>Assume all incoming data is untrusted</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div id="cors" class="tab-content">
+                    <h4>Cross-Origin Resource Sharing (CORS)</h4>
+                    <p>CORS allows servers to explicitly permit cross-origin requests:</p>
+                    
+                    <div class="code-block">
+// Client-side request
+fetch('https://api.example.com/data', {
+  method: 'GET',
+  mode: 'cors', // Explicitly request CORS
+  credentials: 'include' // Include cookies if needed
+})
+.then(response => response.json())
+.then(data => console.log(data));
+
+// Server response headers required:
+// HTTP/1.1 200 OK
+// Access-Control-Allow-Origin: https://your-site.com
+// Access-Control-Allow-Credentials: true
+// Access-Control-Allow-Methods: GET, POST, PUT
+// Access-Control-Allow-Headers: Content-Type, Authorization
+                    </div>
+                    
+                    <h4>Common CORS Headers:</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Header</th>
+                                <th>Purpose</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>Access-Control-Allow-Origin</code></td>
+                                <td>Specifies allowed origins</td>
+                                <td><code>https://your-site.com</code> or <code>*</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Access-Control-Allow-Methods</code></td>
+                                <td>Allowed HTTP methods</td>
+                                <td><code>GET, POST, PUT, DELETE</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Access-Control-Allow-Headers</code></td>
+                                <td>Allowed request headers</td>
+                                <td><code>Content-Type, Authorization</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Access-Control-Allow-Credentials</code></td>
+                                <td>Allow sending cookies</td>
+                                <td><code>true</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Access-Control-Max-Age</code></td>
+                                <td>Cache preflight results</td>
+                                <td><code>86400</code> (24 hours)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="document-domain" class="tab-content">
+                    <h4>Legacy Method: document.domain (DEPRECATED)</h4>
+                    
+                    <div class="danger">
+                        <strong>❌ STRONGLY DISCOURAGED:</strong> This method is being deprecated in modern browsers due to security issues.
+                    </div>
+                    
+                    <div class="code-block">
+// On login.example.com
+document.domain = "example.com";
+
+// On shop.example.com
+document.domain = "example.com";
+
+// Now they can interact as if same-origin
+// BUT: Any subdomain can join this shared origin!
+
+// Security risk:
+// evil.subdomain.example.com can also set:
+document.domain = "example.com";
+// And gain access to sensitive data
+                    </div>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>document.domain</th>
+                                <th>Result</th>
+                                <th>Security Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>login.example.com → payments.example.com</td>
+                                <td>Both set to "example.com"</td>
+                                <td>✅ Access allowed</td>
+                                <td>Low if both are trusted</td>
+                            </tr>
+                            <tr>
+                                <td>login.example.com → example.com</td>
+                                <td>Only login sets it</td>
+                                <td>❌ Access denied</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>evil.sub.example.com → login.example.com</td>
+                                <td>Both set to "example.com"</td>
+                                <td>✅ Access allowed</td>
+                                <td>HIGH - attacker gains access</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Automatic Exceptions -->
+        <div class="card">
+            <h2 class="card-title exceptions">Automatic Exceptions to SOP</h2>
+            <p>Certain cross-origin interactions are allowed by default for web functionality:</p>
+            
+            <div class="practice-grid">
+                <div class="practice-card">
+                    <h4>1. Loading Images</h4>
+                    <p><code>&lt;img src="https://other-site.com/image.jpg"&gt;</code></p>
+                    <p><strong>Risk:</strong> May leak information via cookies or timing attacks</p>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>2. Loading CSS</h4>
+                    <p><code>&lt;link href="https://cdn.com/styles.css"&gt;</code></p>
+                    <p><strong>Risk:</strong> CSS can be used for UI redressing attacks</p>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>3. Loading Scripts</h4>
+                    <p><code>&lt;script src="https://cdn.com/library.js"&gt;</code></p>
+                    <p><strong>Risk:</strong> Scripts execute with full privileges of the embedding page</p>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>4. Form Submissions</h4>
+                    <p><code>&lt;form action="https://bank.com/transfer"&gt;</code></p>
+                    <p><strong>Risk:</strong> Enables CSRF attacks - requests are sent with cookies</p>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>5. Embedding Content</h4>
+                    <p><code>&lt;iframe src="https://other-site.com"&gt;</code></p>
+                    <p><strong>Risk:</strong> Clickjacking attacks using transparent overlays</p>
+                </div>
+            </div>
+            
+            <div class="info">
+                <strong>🔒 Mitigation Strategies:</strong>
+                <ul class="step-list">
+                    <li>Use <code>Subresource Integrity (SRI)</code> for scripts and styles</li>
+                    <li>Implement anti-CSRF tokens for forms</li>
+                    <li>Use <code>X-Frame-Options</code> or <code>Content-Security-Policy</code> to control embedding</li>
+                    <li>Set <code>SameSite</code> cookie attribute to prevent cross-origin cookie sending</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- CORS Deep Dive -->
+        <div class="demo-area">
+            <h2 class="card-title cors">CORS Implementation Examples</h2>
+            
+            <div class="code-block">
+// ===== CLIENT-SIDE CORS REQUEST =====
+// Example: Fetching geolocation data from Google Maps API
+async function getGeolocation(address) {
+  const baseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
+  const apiKey = 'YOUR_API_KEY';
+  
+  try {
+    const response = await fetch(
+      `${baseUrl}?address=${encodeURIComponent(address)}&key=${apiKey}`,
+      {
+        method: 'GET',
+        mode: 'cors', // Explicitly request CORS mode
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error('CORS request failed:', error);
+    throw error;
+  }
+}
+
+// ===== SERVER-SIDE CORS CONFIGURATION =====
+// Express.js example with comprehensive CORS setup
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+
+// Basic CORS - allow all origins (NOT RECOMMENDED for production)
+app.use(cors());
+
+// Secure CORS configuration
+const corsOptions = {
+  origin: [
+    'https://trusted-site.com',
+    'https://another-trusted-site.com',
+    'http://localhost:3000' // Development
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'X-CSRF-Token'
+  ],
+  exposedHeaders: ['X-Total-Count', 'X-Rate-Limit'],
+  credentials: true, // Allow cookies
+  maxAge: 86400, // Cache preflight for 24 hours
+  optionsSuccessStatus: 204 // Some legacy browsers choke on 204
+};
+
+app.use(cors(corsOptions));
+
+// Manual CORS headers (without middleware)
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://trusted-site.com',
+    'https://another-trusted-site.com'
+  ];
+  
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Critical Security Consideration:</strong>
+                <p>The Same-Origin Policy <strong>prevents reading responses</strong> from cross-origin requests, but <strong>does not prevent sending requests</strong>.</p>
+                
+                <div class="code-block">
+// This request WILL be sent, even without CORS:
+fetch('https://api.bank.com/transfer', {
+  method: 'POST',
+  body: JSON.stringify({
+    to: 'attacker',
+    amount: '1000000'
+  }),
+  // Cookies ARE sent if they exist for api.bank.com
+  credentials: 'include'
+});
+
+// The attacker won't see the response, but the transfer
+// will still happen if the endpoint doesn't validate CSRF tokens!
+                </div>
+                
+                <p><strong>Always implement CSRF protection on state-changing endpoints!</strong></p>
+            </div>
+        </div>
+        
+        <!-- Summary and Best Practices -->
+        <div class="card">
+            <h2>✅ Same-Origin Policy Best Practices</h2>
+            
+            <div class="practice-grid">
+                <div class="practice-card">
+                    <h4>For Website Owners</h4>
+                    <ul class="step-list">
+                        <li>✅ Understand that different paths under same origin share trust</li>
+                        <li>✅ Implement proper access controls for user-generated content</li>
+                        <li>✅ Use separate subdomains for untrusted content when possible</li>
+                        <li>✅ Implement CSP to control resource loading</li>
+                        <li>✅ Use SameSite cookie attribute</li>
+                    </ul>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>For API Developers</h4>
+                    <ul class="step-list">
+                        <li>✅ Implement proper CORS headers</li>
+                        <li>✅ Restrict origins to trusted domains only</li>
+                        <li>✅ Never use <code>Access-Control-Allow-Origin: *</code> with credentials</li>
+                        <li>✅ Implement CSRF protection for state-changing endpoints</li>
+                        <li>✅ Use preflight caching to improve performance</li>
+                    </ul>
+                </div>
+                
+                <div class="practice-card">
+                    <h4>For Frontend Developers</h4>
+                    <ul class="step-list">
+                        <li>✅ Always verify message origins with postMessage</li>
+                        <li>✅ Handle CORS errors gracefully</li>
+                        <li>✅ Use Subresource Integrity for external resources</li>
+                        <li>✅ Understand the security implications of iframes</li>
+                        <li>✅ Implement proper error handling for cross-origin requests</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="info" style="margin-top: 1rem;">
+                <strong>🎯 Key Takeaways:</strong>
+                <ol class="step-list">
+                    <li><strong>Origin = Protocol + Hostname + Port</strong> - three components must match exactly</li>
+                    <li><strong>SOP allows embedding and linking</strong> but restricts data reading and modification</li>
+                    <li><strong>Use postMessage for secure cross-origin communication</strong> - always verify origins</li>
+                    <li><strong>CORS enables controlled cross-origin requests</strong> - servers must explicitly allow them</li>
+                    <li><strong>SOP prevents reading responses</strong> but not sending requests - CSRF protection is still needed</li>
+                    <li><strong>Automatic exceptions exist</strong> for core web functionality - understand their risks</li>
+                </ol>
+            </div>
+        </div>
+        
+               <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabContainer = tab.closest('.tab-container');
+                
+                // Remove active class from all tabs in this container
+                tabContainer.querySelectorAll('.tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // Remove active class from all contents in this container
+                tabContainer.querySelectorAll('.tab-content').forEach(c => {
+                    c.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = tab.getAttribute('data-tab');
+                const content = tabContainer.querySelector(`#${tabId}`);
+                if (content) {
+                    content.classList.add('active');
+                }
+            });
+        });
+        
+        // SOP demo simulation
+        function simulateSOPCheck() {
+            const sourceUrl = document.getElementById('source-url').value;
+            const targetUrl = document.getElementById('target-url').value;
+            const resultDiv = document.getElementById('sop-result');
+            
+            if (!sourceUrl || !targetUrl) {
+                resultDiv.innerHTML = '<div class="warning">Please enter both URLs</div>';
+                return;
+            }
+            
+            try {
+                const source = new URL(sourceUrl);
+                const target = new URL(targetUrl);
+                
+                const sameOrigin = 
+                    source.protocol === target.protocol &&
+                    source.hostname === target.hostname &&
+                    source.port === target.port;
+                
+                const result = sameOrigin ? '✅ SAME ORIGIN' : '❌ DIFFERENT ORIGIN';
+                
+                resultDiv.innerHTML = `
+                    <div class="${sameOrigin ? 'success' : 'danger'}">
+                        <h4>${result}</h4>
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Source</th>
+                                    <th>Target</th>
+                                    <th>Match?</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Protocol</strong></td>
+                                    <td>${source.protocol}</td>
+                                    <td>${target.protocol}</td>
+                                    <td>${source.protocol === target.protocol ? '✅' : '❌'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hostname</strong></td>
+                                    <td>${source.hostname}</td>
+                                    <td>${target.hostname}</td>
+                                    <td>${source.hostname === target.hostname ? '✅' : '❌'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Port</strong></td>
+                                    <td>${source.port || '(default)'}</td>
+                                    <td>${target.port || '(default)'}</td>
+                                    <td>${source.port === target.port ? '✅' : '❌'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="danger">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log(`
+            Same-Origin Policy Guide - Key Takeaways:
+            
+            1. ORIGIN DEFINITION:
+               - Protocol + Hostname + Port
+               - Path is NOT part of origin
+               - All three must match exactly
+            
+            2. ALLOWED INTERACTIONS:
+               - Linking to other origins
+               - Embedding (iframes, images)
+               - Form submissions
+               - Loading resources (scripts, styles)
+            
+            3. RESTRICTED INTERACTIONS:
+               - Reading data from different origins
+               - Modifying content from different origins
+               - Accessing DOM of cross-origin iframes
+            
+            4. SAFE RELAXATION METHODS:
+               - postMessage API (with origin validation)
+               - CORS (server-controlled)
+               - Never use document.domain (deprecated)
+            
+            5. SECURITY IMPLICATIONS:
+               - SOP prevents data exfiltration
+               - But doesn't prevent request sending
+               - CSRF protection is still essential
+               - Understand automatic exceptions
+            
+            Remember: SOP is the foundation of web security!
+            `);
+            
+            // Set example URLs for SOP demo
+            document.getElementById('source-url').value = 'https://example.com/page1.html';
+            document.getElementById('target-url').value = 'https://example.com/page2.html';
+            simulateSOPCheck();
+        });
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>

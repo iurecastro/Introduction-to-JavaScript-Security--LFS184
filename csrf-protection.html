@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Protection Techniques - Advanced Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .comparison-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .protection-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .protection-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .method-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .method-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .method-title {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-size: 1.3rem;
+        }
+        
+        .method-title.referer { border-bottom-color: #ff6b6b; }
+        .method-title.samesite { border-bottom-color: #4ecdc4; }
+        .method-title.token { border-bottom-color: #45b7d1; }
+        .method-title.getpost { border-bottom-color: #96ceb4; }
+        
+        .effectiveness-meter {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .meter-label {
+            font-weight: bold;
+            margin-right: 1rem;
+            min-width: 100px;
+        }
+        
+        .meter-bar {
+            flex-grow: 1;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+        
+        .low { width: 30%; background: #ff6b6b; }
+        .medium { width: 70%; background: #feca57; }
+        .high { width: 95%; background: #1dd1a1; }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        @media (max-width: 480px) {
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .pros, .cons {
+            padding: 1rem;
+            border-radius: 5px;
+            min-height: 150px;
+        }
+        
+        .pros {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .cons {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .pros h4, .cons h4 {
+            margin-bottom: 0.5rem;
+            color: #155724;
+        }
+        
+        .cons h4 {
+            color: #721c24;
+        }
+        
+        .pros ul, .cons ul {
+            margin-left: 1.2rem;
+        }
+        
+        .pros li, .cons li {
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .implementation {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .implementation h4 {
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-table th {
+            background: #4a6491;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .recommendation {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            border: 2px solid #4caf50;
+        }
+        
+        .recommendation h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+        
+        .demo-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .demo-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .demo-form h4 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        button {
+            background: #4a6491;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+        
+        button:hover {
+            background: #3a5379;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .tab-container {
+            margin: 1.5rem 0;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #4a6491;
+            border-bottom: 3px solid #4a6491;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .token-demo {
+            margin: 1rem 0;
+        }
+        
+        .status-message {
+            padding: 0.75rem;
+            margin-top: 1rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .related-topics {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .related-topics h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .related-topics ul {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-left: 1.5rem;
+        }
+        
+        .related-topics li {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>            
+            <h1>CSRF Protection Techniques</h1>
+            <p class="subtitle">Advanced Guide to Preventing Cross-Site Request Forgery Attacks</p>
+        </header>
+        
+        <div class="info">
+            <strong>Note:</strong> This guide complements the CSRF demonstration page. It focuses on implementation details and advanced protection techniques.
+        </div>
+        
+        <div class="comparison-section">
+            <h2>Protection Methods Comparison</h2>
+            <div class="comparison-table-container">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Protection Method</th>
+                            <th>Effectiveness</th>
+                            <th>Implementation Difficulty</th>
+                            <th>Browser Support</th>
+                            <th>Recommended Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Referer Header Check</strong></td>
+                            <td>Low</td>
+                            <td>Easy</td>
+                            <td>Universal</td>
+                            <td>Additional layer only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SameSite Cookies</strong></td>
+                            <td>High</td>
+                            <td>Easy</td>
+                            <td>Modern browsers</td>
+                            <td>Primary defense</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CSRF Tokens</strong></td>
+                            <td>Very High</td>
+                            <td>Moderate</td>
+                            <td>Universal</td>
+                            <td>Critical actions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POST-only for state changes</strong></td>
+                            <td>Medium</td>
+                            <td>Easy</td>
+                            <td>Universal</td>
+                            <td>Standard practice</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="protection-methods">
+            <!-- Method 1: Referer Header -->
+            <div class="method-card">
+                <h2 class="method-title referer">Referer Header Check</h2>
+                <div class="effectiveness-meter">
+                    <span class="meter-label">Effectiveness:</span>
+                    <div class="meter-bar">
+                        <div class="meter-fill low"></div>
+                    </div>
+                </div>
+                
+                <p>Checking the HTTP Referer header to ensure requests originate from your own domain.</p>
+                
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Advantages</h4>
+                        <ul>
+                            <li>Simple to implement</li>
+                            <li>No client-side changes needed</li>
+                            <li>Works for all request types</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>❌ Limitations</h4>
+                        <ul>
+                            <li>Browsers might strip the header</li>
+                            <li>Privacy tools may block it</li>
+                            <li>Referrer-Policy can disable it</li>
+                            <li>Potentially spoofable</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="implementation">
+                    <h4>Implementation Example:</h4>
+                    <div class="code-block">
+// Express.js implementation
+app.post('/transfer', (req, res) => {
+  const referer = req.headers.referer;
+  
+  // Check if Referer exists and is from our domain
+  if (!referer || !referer.startsWith('https://bank.com')) {
+    res.status(403).send('Invalid referer');
+    return;
+  }
+  
+  // Process transfer...
+  res.send('Transfer successful');
+});
+                    </div>
+                </div>
+                
+                <div class="warning">
+                    <strong>⚠️ Warning:</strong> Never rely solely on Referer header checks for CSRF protection. Use this only as an additional layer.
+                </div>
+            </div>
+            
+            <!-- Method 2: SameSite Cookies -->
+            <div class="method-card">
+                <h2 class="method-title samesite">SameSite Cookie Attribute</h2>
+                <div class="effectiveness-meter">
+                    <span class="meter-label">Effectiveness:</span>
+                    <div class="meter-bar">
+                        <div class="meter-fill high"></div>
+                    </div>
+                </div>
+                
+                <p>Using the SameSite cookie attribute to control when cookies are sent with cross-site requests.</p>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="lax">SameSite=Lax</button>
+                        <button class="tab" data-tab="strict">SameSite=Strict</button>
+                        <button class="tab" data-tab="none">SameSite=None</button>
+                    </div>
+                    
+                    <div id="lax" class="tab-content active">
+                        <h4>SameSite=Lax (Recommended Default)</h4>
+                        <p>Cookies are sent with top-level navigations but not with cross-site subrequests.</p>
+                        <ul>
+                            <li>✅ CSRF protection for state-changing requests</li>
+                            <li>✅ Allows legitimate navigation from external sites</li>
+                            <li>✅ Prevents CSRF via form submissions</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="strict" class="tab-content">
+                        <h4>SameSite=Strict (Maximum Security)</h4>
+                        <p>Cookies are only sent for same-site requests.</p>
+                        <ul>
+                            <li>✅ Maximum CSRF protection</li>
+                            <li>❌ Breaks links from external sites</li>
+                            <li>❌ Users must start navigation from your site</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="none" class="tab-content">
+                        <h4>SameSite=None (No Protection)</h4>
+                        <p>Cookies are always sent, even with cross-site requests.</p>
+                        <ul>
+                            <li>❌ No CSRF protection</li>
+                            <li>✅ Required for cross-site functionality</li>
+                            <li>⚠️ Must use with Secure attribute</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="implementation">
+                    <h4>Implementation Example:</h4>
+                    <div class="code-block">
+// Express.js cookie setup
+res.cookie('sessionId', sessionId, {
+  httpOnly: true,   // Prevent JavaScript access
+  secure: true,     // Require HTTPS (essential for SameSite)
+  sameSite: 'lax',  // CSRF protection level
+  path: '/',
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+});
+                    </div>
+                </div>
+                
+                <div class="info">
+                    <strong>📅 Browser Update:</strong> Since 2020, most browsers default to SameSite=Lax for cookies without an explicit SameSite attribute.
+                </div>
+            </div>
+            
+            <!-- Method 3: CSRF Tokens -->
+            <div class="method-card">
+                <h2 class="method-title token">CSRF Tokens (Synchronizer Token Pattern)</h2>
+                <div class="effectiveness-meter">
+                    <span class="meter-label">Effectiveness:</span>
+                    <div class="meter-bar">
+                        <div class="meter-fill high"></div>
+                    </div>
+                </div>
+                
+                <p>Generating unique, unpredictable tokens that must be included with each state-changing request.</p>
+                
+                <div class="token-demo">
+                    <h4>How CSRF Tokens Work:</h4>
+                    <div class="form-demo">
+                        <div class="demo-form">
+                            <h5>Step 1: Server Generates Token</h5>
+                            <div class="code-block">
+const crypto = require('crypto');
+const csrfToken = crypto
+  .randomBytes(32)
+  .toString('hex');
+                            </div>
+                            <label>Generated CSRF Token:</label>
+                            <input type="text" id="generated-token" value="a1b2c3d4e5f6g7h8i9j0" readonly>
+                            <button onclick="generateToken()">Generate New Token</button>
+                            <div id="token-status" class="status-message"></div>
+                        </div>
+                        
+                        <div class="demo-form">
+                            <h5>Step 2: Token Verification</h5>
+                            <div class="code-block">
+// Server verifies token
+if (req.body.csrf !== 
+    req.session.csrfToken) {
+  return res.status(403);
+}
+                            </div>
+                            <label>Verify Token:</label>
+                            <input type="text" id="verify-token" placeholder="Enter token to verify">
+                            <button onclick="verifyToken()">Verify Token</button>
+                            <div id="verify-status" class="status-message"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="implementation">
+                    <h4>Complete Implementation:</h4>
+                    <div class="code-block">
+// Generate and store token
+app.get('/transfer', (req, res) => {
+  const csrfToken = crypto
+    .randomBytes(32)
+    .toString('hex');
+  
+  req.session.csrfToken = csrfToken;
+  
+  res.send(`
+    &lt;form method="POST" action="/transfer"&gt;
+      &lt;input type="hidden" 
+             name="csrf" 
+             value="${csrfToken}" /&gt;
+      Amount: &lt;input name="amount" /&gt;
+      To: &lt;input name="to" /&gt;
+      &lt;input type="submit" 
+             value="Send" /&gt;
+    &lt;/form&gt;
+  `);
+});
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Method 4: GET vs POST -->
+            <div class="method-card">
+                <h2 class="method-title getpost">GET vs POST Requests</h2>
+                <div class="effectiveness-meter">
+                    <span class="meter-label">Effectiveness:</span>
+                    <div class="meter-bar">
+                        <div class="meter-fill medium"></div>
+                    </div>
+                </div>
+                
+                <p>Using proper HTTP methods to reduce CSRF attack surface.</p>
+                
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Use POST for:</h4>
+                        <ul>
+                            <li>State-changing operations</li>
+                            <li>Sensitive actions</li>
+                            <li>Form submissions</li>
+                            <li>Data modifications</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>❌ Avoid GET for:</h4>
+                        <ul>
+                            <li>Transferring funds</li>
+                            <li>Changing passwords</li>
+                            <li>Deleting data</li>
+                            <li>Any action with side effects</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="implementation">
+                    <h4>Why POST Reduces CSRF Risk:</h4>
+                    <p><strong>GET requests can be forged easily:</strong></p>
+                    <div class="code-block">
+&lt;!-- Simple image tag attack --&gt;
+&lt;img src="http://bank.com/transfer?to=attacker&amount=1000"&gt;
+                    </div>
+                    
+                    <p><strong>Proper HTTP Method Usage:</strong></p>
+                    <div class="code-block">
+// ❌ WRONG - Using GET for state changes
+app.get('/transfer', (req, res) => {
+  // This is vulnerable to CSRF!
+  transferMoney(req.query.amount, 
+                req.query.to);
+});
+
+// ✅ CORRECT - Using POST for state changes
+app.post('/transfer', (req, res) => {
+  // Attack surface is reduced
+  transferMoney(req.body.amount, 
+                req.body.to);
+});
+                    </div>
+                </div>
+                
+                <div class="info">
+                    <strong>Best Practice:</strong> Follow RESTful principles: GET for reading, POST for creating, PUT/PATCH for updating, DELETE for deleting.
+                </div>
+            </div>
+        </div>
+        
+        <div class="recommendation">
+            <h3>🚀 Recommended Security Strategy</h3>
+            <p>For maximum protection against CSRF attacks, implement a defense-in-depth approach:</p>
+            <ol>
+                <li><strong>Primary Defense:</strong> Use <code>SameSite=Lax</code> cookies for all session cookies</li>
+                <li><strong>Critical Actions:</strong> Implement CSRF tokens for sensitive operations</li>
+                <li><strong>HTTP Methods:</strong> Use POST for all state-changing operations</li>
+                <li><strong>Additional Layer:</strong> Consider Referer header checks</li>
+                <li><strong>Always Use HTTPS:</strong> Essential for cookie security</li>
+            </ol>
+            
+            <div class="code-block">
+// Complete security setup example
+res.cookie('sessionId', sessionId, {
+  httpOnly: true,    // Prevent XSS access
+  secure: true,      // HTTPS only
+  sameSite: 'lax',   // CSRF protection
+  path: '/',
+  maxAge: 86400000
+});
+
+// Validate CSRF tokens for sensitive actions
+function validateCSRF(req) {
+  return req.body.csrfToken === 
+         req.session.csrfToken;
+}
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h3>🛡️ Combined Protection Demo</h3>
+            <p>See how multiple layers work together to prevent CSRF:</p>
+            
+            <div class="form-demo">
+                <div class="demo-form">
+                    <h4>Without Protection (Vulnerable)</h4>
+                    <div class="code-block">
+// Vulnerable endpoint
+app.post('/transfer', (req, res) => {
+  // No CSRF protection
+  processTransfer(req.body);
+});
+                    </div>
+                    <p><strong>Attack Success Rate:</strong> 100%</p>
+                </div>
+                
+                <div class="demo-form">
+                    <h4>With Full Protection</h4>
+                    <div class="code-block">
+// Protected endpoint
+app.post('/transfer', (req, res) => {
+  // Layer 1: SameSite cookie
+  // Layer 2: CSRF token validation
+  if (!validateCSRF(req)) 
+    return res.status(403);
+  // Layer 3: Referer check
+  if (!validReferer(req)) 
+    return res.status(403);
+  
+  processTransfer(req.body);
+});
+                    </div>
+                    <p><strong>Attack Success Rate:</strong> &lt; 0.01%</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="related-topics">
+            <h3>🔗 Related Topics to Explore</h3>
+            <ul>
+                <li><strong>CORS (Cross-Origin Resource Sharing):</strong> Controls cross-origin requests</li>
+                <li><strong>XSS (Cross-Site Scripting):</strong> Often used together with CSRF</li>
+                <li><strong>Content Security Policy:</strong> Additional layer of protection</li>
+                <li><strong>OAuth 2.0 Security:</strong> CSRF protection in OAuth flows</li>
+                <li><strong>Double Submit Cookie Pattern:</strong> Alternative to server-side tokens</li>
+            </ul>
+        </div>
+        
+                <footer>
+                <!-- Primeira linha: Referência ao curso -->
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>Based on "Introduction to JavaScript Security (LFS184)" by The Linux Foundation</strong>
+                </p>
+                
+                <!-- Segunda linha: Informações de licença e autoria -->
+                <p style="margin-bottom: 1rem; font-size: 0.95rem;">
+                    Security education reference • Created for learning and demonstration purposes • Licensed under 
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank" 
+                    style="color: #4a6491; text-decoration: none; font-weight: 600;">
+                        CC-BY-SA-4.0
+                    </a>
+                </p>
+                
+                <!-- Terceira linha: Informações pessoais -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="color: #4a6491; font-weight: 600;">© Iure Castro</span>
+                    <span style="color: #666;">•</span>
+                    <span>Personal learning portfolio</span>
+                    <span style="color: #666;">•</span>
+                    <span>All examples for educational use</span>
+                </div>
+                
+                <!-- Quarta linha: Links úteis -->
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <a href="https://training.linuxfoundation.org/training/introduction-to-javascript-security-lfs184/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🔗 Original Course
+                    </a>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        📄 CC-BY-SA-4.0 License
+                    </a>
+                    <a href="certificate.pdf" 
+                    target="_blank"
+                    style="color: #4a6491; text-decoration: none; font-size: 0.9rem;">
+                        🏆 My Certificate
+                    </a>
+                </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Token generation demo
+        function generateToken() {
+            const chars = '0123456789abcdef';
+            let token = '';
+            for (let i = 0; i < 20; i++) {
+                token += chars[Math.floor(Math.random() * chars.length)];
+            }
+            
+            // Update display
+            const tokenInput = document.getElementById('generated-token');
+            tokenInput.value = token;
+            
+            // Store in session for verification
+            sessionStorage.setItem('demoCsrfToken', token);
+            
+            // Show status
+            const statusElement = document.getElementById('token-status');
+            statusElement.textContent = '✅ New token generated and stored!';
+            statusElement.className = 'status-message success';
+            
+            // Clear after 3 seconds
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = 'status-message';
+            }, 3000);
+        }
+        
+        // Token verification demo
+        function verifyToken() {
+            const inputToken = document.getElementById('verify-token').value;
+            const storedToken = sessionStorage.getItem('demoCsrfToken') || 'a1b2c3d4e5f6g7h8i9j0';
+            
+            const statusElement = document.getElementById('verify-status');
+            
+            if (!inputToken) {
+                statusElement.textContent = '⚠️ Please enter a token to verify';
+                statusElement.className = 'status-message';
+                return;
+            }
+            
+            if (inputToken === storedToken) {
+                statusElement.textContent = '✅ Token verified successfully!';
+                statusElement.className = 'status-message success';
+            } else {
+                statusElement.textContent = '❌ Invalid token. This would block a CSRF attack!';
+                statusElement.className = 'status-message error';
+            }
+            
+            // Clear after 5 seconds
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = 'status-message';
+            }, 5000);
+        }
+        
+        // Initialize with a token
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!sessionStorage.getItem('demoCsrfToken')) {
+                sessionStorage.setItem('demoCsrfToken', 'a1b2c3d4e5f6g7h8i9j0');
+            }
+            
+            // Log educational message
+            console.log(`
+            CSRF Protection Guide - Key Takeaways:
+            
+            1. SameSite=Lax cookies provide strong baseline protection
+            2. CSRF tokens are essential for sensitive operations
+            3. Always use POST for state-changing requests
+            4. Never rely on Referer headers alone
+            5. Combine multiple defenses for maximum security
+            `);
+        });
+    </script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</body>
+</html>
