@@ -11,7 +11,7 @@
 
 This portfolio organizes and demonstrates key JavaScript security concepts through interactive examples and practical implementations. It serves as both a learning reference and a showcase of applied security knowledge.
 
-**Live Demo:** [https://iurecastro.github.io/js-security-portfolio](https://iurecastro.github.io/js-security-portfolio)
+**Live Demo:** [https://iurecastro.github.io/js-security-portfolio](https://iurecastro.github.io/Introduction-to-JavaScript-Security--LFS184) 
 
 ## 📚 About This Project
 
@@ -99,10 +99,9 @@ This derivative work is licensed under the same terms as the original:
 **Iure Castro**  
 Security Enthusiast & Web Developer
 
-- 🌐 **Portfolio:** [Live Demo](https://iurecastro.github.io/js-security-portfolio)
+- 🌐 **Portfolio:** [Live Demo](https://iurecastro.github.io/Introduction-to-JavaScript-Security--LFS184)
 - 💼 **LinkedIn:** [Connect with me](https://linkedin.com/in/iurecastro)
 - 💻 **GitHub:** [@iurecastro](https://github.com/iurecastro)
-- 📧 **Email:** [your-email@example.com](mailto:your-email@example.com)
 
 ## 🌟 Why This Portfolio Stands Out
 
